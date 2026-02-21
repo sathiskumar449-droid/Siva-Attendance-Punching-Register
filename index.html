@@ -734,8 +734,36 @@
         width: 100%;
       }
 
-      .control-row {
+      .row {
+        display: grid;
         grid-template-columns: 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .control-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        align-items: stretch;
+        margin-bottom: 12px;
+      }
+
+      .control-row > div {
+        display: grid;
+        gap: 8px;
+      }
+
+      .time-edit {
+        display: none;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      .time-edit > div {
+        display: grid;
+        gap: 8px;
       }
 
       .actions {
@@ -821,18 +849,38 @@
       }
 
       .row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
         margin-bottom: 12px;
         position: relative;
       }
 
-      select {
+      .row label {
+        margin-bottom: 4px;
+        font-size: 0.8rem;
+      }
+
+      .row select,
+      .row input {
         position: relative;
         z-index: 10;
+        width: 100%;
       }
 
       #staffSelect {
         position: relative;
         z-index: 100;
+        width: 100%;
+      }
+
+      .control-row > div label {
+        margin-bottom: 4px;
+        font-size: 0.8rem;
+      }
+
+      .control-row > div input {
+        width: 100%;
       }
     }
   </style>
