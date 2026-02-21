@@ -217,15 +217,17 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 12px;
-      align-items: end;
+      align-items: stretch;
+      width: 100%;
     }
 
     .time-edit {
       display: none;
       grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: 12px;
-      align-items: end;
+      align-items: stretch;
       margin-top: 8px;
+      width: 100%;
     }
 
     .time-edit.active {
@@ -249,6 +251,7 @@
       transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
       position: relative;
       overflow: hidden;
+      min-width: 0;
     }
 
     button.secondary {
@@ -320,6 +323,7 @@
       grid-template-columns: 1fr 1fr auto;
       gap: 10px;
       align-items: end;
+      width: 100%;
     }
 
     .staff-list {
@@ -337,6 +341,8 @@
       border-radius: 12px;
       border: 1px solid var(--border);
       background: #f9fbff;
+      width: 100%;
+      box-sizing: border-box;
     }
 
     .staff-row input {
@@ -640,6 +646,12 @@
         transform: translateX(0);
       }
 
+      .app {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
       .nav {
         grid-template-columns: repeat(2, 1fr);
         width: 100%;
@@ -723,6 +735,7 @@
         font-size: 1.3rem;
         margin: 0;
         word-break: break-word;
+        max-width: 100%;
       }
 
       header p {
@@ -735,7 +748,7 @@
       }
 
       input, select, button {
-        padding: 10px 12px;
+        padding: 9px 10px;
         font-size: 0.95rem;
         width: 100%;
         box-sizing: border-box;
@@ -784,12 +797,22 @@
         grid-template-columns: 1fr;
         gap: 8px;
         align-items: stretch;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
+        width: 100%;
       }
 
       .control-row > div {
         display: grid;
-        gap: 8px;
+        gap: 6px;
+      }
+
+      .control-row > div label {
+        margin-bottom: 2px;
+      }
+
+      .control-row > div input {
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .time-edit {
@@ -797,11 +820,21 @@
         grid-template-columns: 1fr;
         gap: 8px;
         margin-top: 8px;
+        width: 100%;
       }
 
       .time-edit > div {
         display: grid;
-        gap: 8px;
+        gap: 6px;
+      }
+
+      .time-edit > div label {
+        margin-bottom: 2px;
+      }
+
+      .time-edit > div input {
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .actions {
@@ -842,6 +875,7 @@
         font-size: 1.1rem;
         margin: 0;
         word-break: break-word;
+        max-width: 100%;
       }
 
       header {
@@ -862,10 +896,11 @@
       }
 
       button {
-        font-size: 0.9rem;
-        padding: 10px 12px;
+        font-size: 0.85rem;
+        padding: 9px 10px;
         width: 100%;
         box-sizing: border-box;
+        min-width: 0;
       }
 
       .sidebar {
@@ -879,13 +914,13 @@
 
       .nav {
         grid-template-columns: repeat(2, 1fr);
-        gap: 8px;
+        gap: 6px;
         width: 100%;
       }
 
       .nav-link {
-        padding: 10px 8px;
-        font-size: 0.8rem;
+        padding: 8px 6px;
+        font-size: 0.7rem;
         width: 100%;
       }
 
@@ -895,35 +930,35 @@
 
       .toast {
         padding: 10px 12px;
-        font-size: 0.85rem;
+        font-size: 0.8rem;
       }
 
       table {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
         width: 100%;
       }
 
       table th, table td {
-        padding: 4px 3px;
+        padding: 3px 2px;
       }
 
       .detail-line {
-        padding: 8px;
-        font-size: 0.8rem;
+        padding: 6px;
+        font-size: 0.75rem;
       }
 
       .row {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 6px;
-        margin-bottom: 10px;
+        gap: 4px;
+        margin-bottom: 8px;
         position: relative;
         width: 100%;
       }
 
       .row label {
-        margin-bottom: 4px;
-        font-size: 0.75rem;
+        margin-bottom: 2px;
+        font-size: 0.7rem;
       }
 
       .row select,
@@ -932,6 +967,8 @@
         z-index: 10;
         width: 100%;
         box-sizing: border-box;
+        padding: 7px 8px;
+        font-size: 0.85rem;
       }
 
       #staffSelect {
@@ -942,22 +979,78 @@
       }
 
       .control-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 6px;
+        align-items: stretch;
+        margin-bottom: 6px;
         width: 100%;
       }
 
+      .control-row > div {
+        display: grid;
+        gap: 3px;
+      }
+
       .control-row > div label {
-        margin-bottom: 4px;
-        font-size: 0.75rem;
+        margin-bottom: 1px;
+        font-size: 0.7rem;
       }
 
       .control-row > div input {
         width: 100%;
         box-sizing: border-box;
+        padding: 7px 8px;
+        font-size: 0.85rem;
+      }
+
+      .time-edit {
+        display: none;
+        grid-template-columns: 1fr;
+        gap: 6px;
+        margin-top: 6px;
+        width: 100%;
+      }
+
+      .time-edit > div {
+        display: grid;
+        gap: 3px;
+      }
+
+      .time-edit > div label {
+        margin-bottom: 1px;
+        font-size: 0.7rem;
+      }
+
+      .time-edit > div input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 7px 8px;
+        font-size: 0.85rem;
       }
 
       .actions {
         grid-template-columns: 1fr;
         width: 100%;
+        gap: 8px;
+      }
+
+      .actions button {
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 0.8rem;
+      }
+
+      label {
+        font-size: 0.7rem;
+        margin-bottom: 3px;
+      }
+
+      input, select {
+        padding: 7px 8px;
+        font-size: 0.85rem;
+        width: 100%;
+        box-sizing: border-box;
       }
     }
   </style>
