@@ -3679,7 +3679,7 @@
       });
     };
 
-    const addMachine = () => {
+    const addStockMachine = () => {
       const machineNum = newMachineNumber.value.trim();
       const rpm = parseInt(newMachineRpm.value) || 0;
       
@@ -4041,13 +4041,13 @@
 
     // Stock Management Event Listeners
     if (addMachineBtn) {
-      addMachineBtn.addEventListener("click", addMachine);
+      addMachineBtn.addEventListener("click", addStockMachine);
     }
 
     if (newMachineNumber) {
       newMachineNumber.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
-          addMachine();
+          addStockMachine();
         }
       });
     }
