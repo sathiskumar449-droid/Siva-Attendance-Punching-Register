@@ -1560,8 +1560,13 @@
             </div>
           </div>
           <div class="footer-actions" style="margin-bottom: 12px;">
-            <button id="exportBtn" class="secondary">Export to CSV</button>
+            <button id="exportBtn" class="secondary">Workers Report</button>
             <button id="clearBtn" class="danger">Clear All</button>
+          </div>
+          <div class="footer-actions" style="margin-bottom: 12px;">
+            <button id="exportStockReportBtn" class="secondary">Stock Report</button>
+            <button id="exportLineAssignReportBtn" class="secondary">Line Assignment</button>
+            <button id="exportMachineAssignReportBtn" class="secondary">Machine Assignment</button>
           </div>
           <p class="muted" style="margin-top: 0;">Data stays after refresh. Use export for reports.</p>
           <div class="table-wrap">
@@ -1632,22 +1637,14 @@
               <label for="newMachineNumber">Machine Number</label>
               <input id="newMachineNumber" type="text" placeholder="e.g., Machine 1" />
             </div>
-            <div>
-              <label for="newMachineRpm">RPM</label>
-              <input id="newMachineRpm" type="number" placeholder="0" />
-            </div>
             <button id="addMachineBtn">Add Machine</button>
-          </div>
-          <div class="footer-actions" style="margin-bottom: 12px;">
-            <button id="exportStockReportBtn" class="secondary">Export Stock Report</button>
-            <button id="exportLineAssignReportBtn" class="secondary">Export Line Assignment</button>
-            <button id="exportMachineAssignReportBtn" class="secondary">Export Machine Assignment</button>
           </div>
           <div class="table-wrap">
             <table id="stockTable" style="min-width: 1200px;">
               <thead>
                 <tr>
                   <th>Machine #</th>
+                  <th>Component</th>
                   <th>RPM</th>
                   <th>Beam Total Length</th>
                   <th>Balance Beam</th>
@@ -1656,7 +1653,6 @@
                   <th>Shift 1 Prd</th>
                   <th>Shift 2 Prd</th>
                   <th>Total Prd</th>
-                  <th>Action</th>
                 </tr>
               </thead>
               <tbody id="stockTableBody"></tbody>
@@ -1768,7 +1764,6 @@
 
     // Stock Management Elements
     const newMachineNumber = document.getElementById("newMachineNumber");
-    const newMachineRpm = document.getElementById("newMachineRpm");
     const addMachineBtn = document.getElementById("addMachineBtn");
     const stockTableBody = document.getElementById("stockTableBody");
     const exportStockReportBtn = document.getElementById("exportStockReportBtn");
@@ -3052,10 +3047,17 @@
             nameInput.value = component.name;
             return;
           }
+          const previousName = component.name;
           component.name = updatedName;
           persist();
           renderComponentManagement();
           renderMachineAssignment();
+          state.stock.forEach((machine) => {
+            if (machine.component === previousName) {
+              machine.component = updatedName;
+            }
+          });
+          renderStock();
           updateStatus(`Updated component: ${updatedName}`, "neutral");
         });
 
@@ -3072,9 +3074,15 @@
               }
             });
           });
+          state.stock.forEach((machine) => {
+            if (machine.component === component.name) {
+              machine.component = "";
+            }
+          });
           persist();
           renderComponentManagement();
           renderMachineAssignment();
+          renderStock();
           updateStatus(`Removed component: ${component.name}`, "neutral");
         });
 
@@ -3638,9 +3646,24 @@
       if (!state.stock.length) return;
       
       state.stock.forEach((machine, index) => {
+        const componentOptions = state.components
+          .map((component) => {
+            const isSelected = component.name === machine.component;
+            return `<option value="${component.name}"${isSelected ? " selected" : ""}>${component.name}</option>`;
+          })
+          .join("");
+
+        const componentSelect = `
+          <select data-machine="${index}" data-field="component" style="width: 140px;">
+            <option value="">Select component</option>
+            ${componentOptions}
+          </select>
+        `;
+
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${machine.machineNumber}</td>
+          <td>${componentSelect}</td>
           <td><input type="number" data-machine="${index}" data-field="rpm" value="${machine.rpm}" style="width: 80px;" /></td>
           <td><input type="number" data-machine="${index}" data-field="beamTotal" value="${machine.beamTotal}" style="width: 80px;" /></td>
           <td><input type="number" data-machine="${index}" data-field="balanceBeam" value="${machine.balanceBeam}" style="width: 80px;" /></td>
@@ -3649,7 +3672,6 @@
           <td><input type="number" data-machine="${index}" data-field="shift1Prd" value="${machine.shift1Prd}" style="width: 80px;" /></td>
           <td><input type="number" data-machine="${index}" data-field="shift2Prd" value="${machine.shift2Prd}" style="width: 80px;" /></td>
           <td style="font-weight: 600;">${parseInt(machine.shift1Prd || 0) + parseInt(machine.shift2Prd || 0)}</td>
-          <td><button class="danger delete-machine-btn" data-index="${index}" style="padding: 6px 8px; font-size: 0.8rem;">Delete</button></td>
         `;
         stockTableBody.appendChild(row);
       });
@@ -3665,23 +3687,18 @@
         });
       });
 
-      // Add event listeners to delete buttons
-      document.querySelectorAll(".delete-machine-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const index = parseInt(btn.dataset.index);
-          if (!confirm(`Delete ${state.stock[index].machineNumber}?`)) return;
-          const machineNum = state.stock[index].machineNumber;
-          state.stock.splice(index, 1);
+      document.querySelectorAll("#stockTableBody select[data-field='component']").forEach(select => {
+        select.addEventListener("change", () => {
+          const machineIndex = parseInt(select.dataset.machine);
+          state.stock[machineIndex].component = select.value;
           persist();
-          renderStock();
-          updateStatus(`Deleted ${machineNum}`, "neutral");
         });
       });
+
     };
 
     const addStockMachine = () => {
       const machineNum = newMachineNumber.value.trim();
-      const rpm = parseInt(newMachineRpm.value) || 0;
       
       if (!machineNum) {
         alert("Please enter machine number");
@@ -3695,7 +3712,8 @@
       
       state.stock.push({
         machineNumber: machineNum,
-        rpm: rpm,
+        component: "",
+        rpm: 0,
         beamTotal: 0,
         balanceBeam: 0,
         onLoom: 0,
@@ -3705,34 +3723,32 @@
       });
       
       newMachineNumber.value = "";
-      newMachineRpm.value = "";
       persist();
       renderStock();
       updateStatus(`Added ${machineNum}`, "positive");
     };
 
-    const deleteMachineStock = (index) => {
-      if (!confirm(`Delete ${state.stock[index].machineNumber}?`)) return;
-      const machineNum = state.stock[index].machineNumber;
-      state.stock.splice(index, 1);
-      persist();
-      renderStock();
-      updateStatus(`Deleted ${machineNum}`, "neutral");
-    };
-
     const exportStockReport = () => {
-      let csv = "Machine #,RPM,Beam Total Length,Balance Beam,On Loom,On Floor,Shift 1 Prd,Shift 2 Prd,Total Production\n";
+      if (!reportDateInput.value) {
+        alert("Please select report date.");
+        return;
+      }
+      let csv = "Machine #,Component,RPM,Beam Total Length,Balance Beam,On Loom,On Floor,Shift 1 Prd,Shift 2 Prd,Total Production\n";
       state.stock.forEach(machine => {
         const total = parseInt(machine.shift1Prd || 0) + parseInt(machine.shift2Prd || 0);
-        csv += `${machine.machineNumber},${machine.rpm},${machine.beamTotal},${machine.balanceBeam},${machine.onLoom},${machine.onFloor},${machine.shift1Prd},${machine.shift2Prd},${total}\n`;
+        csv += `${machine.machineNumber},${machine.component || ""},${machine.rpm},${machine.beamTotal},${machine.balanceBeam},${machine.onLoom},${machine.onFloor},${machine.shift1Prd},${machine.shift2Prd},${total}\n`;
       });
-      downloadCSV(csv, `stock-report-${formatDateInput(new Date())}.csv`);
+      downloadCSV(csv, `stock-report-${reportDateInput.value}.csv`);
       updateStatus("Stock report exported", "positive");
     };
 
     const exportLineAssignmentReport = () => {
+      if (!reportDateInput.value) {
+        alert("Please select report date.");
+        return;
+      }
       let csv = "Date,Staff Name,Line,Shift\n";
-      const selectedDate = formatDateInput(new Date());
+      const selectedDate = reportDateInput.value;
       state.lineAssignments.forEach(assign => {
         if (assign.date === selectedDate) {
           csv += `${assign.date},${assign.staff},${assign.line},${assign.shift}\n`;
@@ -3752,8 +3768,12 @@
     };
 
     const exportMachineAssignmentReport = () => {
+      if (!reportDateInput.value) {
+        alert("Please select report date.");
+        return;
+      }
       let csv = "Date,Staff Name,Machine,Shift\n";
-      const selectedDate = formatDateInput(new Date());
+      const selectedDate = reportDateInput.value;
       state.staff.forEach(staff => {
         if (staff.assignmentDate === selectedDate) {
           csv += `${staff.assignmentDate},${staff.name},${staff.machine || "N/A"},${staff.shift || "N/A"}\n`;
@@ -3805,6 +3825,7 @@
         for (let i = 1; i <= 48; i++) {
           state.stock.push({
             machineNumber: `Machine ${i}`,
+            component: "",
             rpm: 0,
             beamTotal: 0,
             balanceBeam: 0,
@@ -3928,6 +3949,7 @@
       newComponentNameInput.value = "";
       persist();
       renderComponentManagement();
+      renderStock();
       updateStatus(`Added component: ${name}`, "positive");
     };
 
