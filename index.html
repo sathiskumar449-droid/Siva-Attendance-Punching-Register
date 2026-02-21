@@ -1294,6 +1294,7 @@
       <nav class="nav">
         <button class="nav-link" data-target="workers-edit">Workers Edit</button>
         <button class="nav-link" data-target="component-mgmt">Component Mgmt</button>
+        <button class="nav-link" data-target="stock">Stock</button>
         <button class="nav-link" data-target="report">Report</button>
         <button class="nav-link" data-target="recycle">Recycle Bin</button>
       </nav>
@@ -1604,6 +1605,48 @@
         </section>
       </section>
 
+      <section id="stock" class="section">
+        <section class="card">
+          <label>Machine Stock Management</label>
+          <p class="muted" style="margin-top: 4px;">Manage machine inventory and production data.</p>
+          <div class="staff-add" style="margin-bottom: 12px; margin-top: 12px;">
+            <div>
+              <label for="newMachineNumber">Machine Number</label>
+              <input id="newMachineNumber" type="text" placeholder="e.g., Machine 1" />
+            </div>
+            <div>
+              <label for="newMachineRpm">RPM</label>
+              <input id="newMachineRpm" type="number" placeholder="0" />
+            </div>
+            <button id="addMachineBtn">Add Machine</button>
+          </div>
+          <div class="footer-actions" style="margin-bottom: 12px;">
+            <button id="exportStockReportBtn" class="secondary">Export Stock Report</button>
+            <button id="exportLineAssignReportBtn" class="secondary">Export Line Assignment</button>
+            <button id="exportMachineAssignReportBtn" class="secondary">Export Machine Assignment</button>
+          </div>
+          <div class="table-wrap">
+            <table id="stockTable" style="min-width: 1200px;">
+              <thead>
+                <tr>
+                  <th>Machine #</th>
+                  <th>RPM</th>
+                  <th>Beam Total Length</th>
+                  <th>Balance Beam</th>
+                  <th>On Loom</th>
+                  <th>On Floor</th>
+                  <th>Shift 1 Prd</th>
+                  <th>Shift 2 Prd</th>
+                  <th>Total Prd</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="stockTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
       <section id="recycle" class="section">
         <section class="card">
           <label>Recycle Bin</label>
@@ -1705,6 +1748,15 @@
     const newComponentNameInput = document.getElementById("newComponentName");
     const addComponentBtn = document.getElementById("addComponentBtn");
 
+    // Stock Management Elements
+    const newMachineNumber = document.getElementById("newMachineNumber");
+    const newMachineRpm = document.getElementById("newMachineRpm");
+    const addMachineBtn = document.getElementById("addMachineBtn");
+    const stockTableBody = document.getElementById("stockTableBody");
+    const exportStockReportBtn = document.getElementById("exportStockReportBtn");
+    const exportLineAssignReportBtn = document.getElementById("exportLineAssignReportBtn");
+    const exportMachineAssignReportBtn = document.getElementById("exportMachineAssignReportBtn");
+
     const punchInBtn = document.getElementById("punchInBtn");
     const punchOutBtn = document.getElementById("punchOutBtn");
     const exportBtn = document.getElementById("exportBtn");
@@ -1728,7 +1780,8 @@
       machines: [],
       lines: [],
       components: [],
-      lineAssignments: []
+      lineAssignments: [],
+      stock: []
     };
 
     const formatDate = (date) => {
@@ -3553,12 +3606,164 @@
         "totals": "Total Working Hours",
         "workers-edit": "Workers Edit",
         "component-mgmt": "Component Management",
+        "stock": "Machine Stock",
         "report": "Report",
         "recycle": "Recycle Bin"
       };
       
       const pageTitle = pageTitles[targetId] || "Attendance";
       updateStatus(`Viewing ${pageTitle}`, "neutral");
+    };
+
+    const renderStock = () => {
+      stockTableBody.innerHTML = "";
+      if (!state.stock.length) return;
+      
+      state.stock.forEach((machine, index) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${machine.machineNumber}</td>
+          <td><input type="number" data-machine="${index}" data-field="rpm" value="${machine.rpm}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="beamTotal" value="${machine.beamTotal}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="balanceBeam" value="${machine.balanceBeam}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="onLoom" value="${machine.onLoom}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="onFloor" value="${machine.onFloor}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="shift1Prd" value="${machine.shift1Prd}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="shift2Prd" value="${machine.shift2Prd}" style="width: 80px;" /></td>
+          <td style="font-weight: 600;">${parseInt(machine.shift1Prd || 0) + parseInt(machine.shift2Prd || 0)}</td>
+          <td><button class="danger delete-machine-btn" data-index="${index}" style="padding: 6px 8px; font-size: 0.8rem;">Delete</button></td>
+        `;
+        stockTableBody.appendChild(row);
+      });
+      
+      // Add event listeners to inputs
+      document.querySelectorAll("#stockTableBody input[type='number']").forEach(input => {
+        input.addEventListener("change", () => {
+          const machineIndex = parseInt(input.dataset.machine);
+          const field = input.dataset.field;
+          state.stock[machineIndex][field] = parseInt(input.value) || 0;
+          persist();
+          renderStock();
+        });
+      });
+
+      // Add event listeners to delete buttons
+      document.querySelectorAll(".delete-machine-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const index = parseInt(btn.dataset.index);
+          if (!confirm(`Delete ${state.stock[index].machineNumber}?`)) return;
+          const machineNum = state.stock[index].machineNumber;
+          state.stock.splice(index, 1);
+          persist();
+          renderStock();
+          updateStatus(`Deleted ${machineNum}`, "neutral");
+        });
+      });
+    };
+
+    const addMachine = () => {
+      const machineNum = newMachineNumber.value.trim();
+      const rpm = parseInt(newMachineRpm.value) || 0;
+      
+      if (!machineNum) {
+        alert("Please enter machine number");
+        return;
+      }
+      
+      if (state.stock.some(m => m.machineNumber === machineNum)) {
+        alert("Machine already exists");
+        return;
+      }
+      
+      state.stock.push({
+        machineNumber: machineNum,
+        rpm: rpm,
+        beamTotal: 0,
+        balanceBeam: 0,
+        onLoom: 0,
+        onFloor: 0,
+        shift1Prd: 0,
+        shift2Prd: 0
+      });
+      
+      newMachineNumber.value = "";
+      newMachineRpm.value = "";
+      persist();
+      renderStock();
+      updateStatus(`Added ${machineNum}`, "positive");
+    };
+
+    const deleteMachineStock = (index) => {
+      if (!confirm(`Delete ${state.stock[index].machineNumber}?`)) return;
+      const machineNum = state.stock[index].machineNumber;
+      state.stock.splice(index, 1);
+      persist();
+      renderStock();
+      updateStatus(`Deleted ${machineNum}`, "neutral");
+    };
+
+    const exportStockReport = () => {
+      let csv = "Machine #,RPM,Beam Total Length,Balance Beam,On Loom,On Floor,Shift 1 Prd,Shift 2 Prd,Total Production\n";
+      state.stock.forEach(machine => {
+        const total = parseInt(machine.shift1Prd || 0) + parseInt(machine.shift2Prd || 0);
+        csv += `${machine.machineNumber},${machine.rpm},${machine.beamTotal},${machine.balanceBeam},${machine.onLoom},${machine.onFloor},${machine.shift1Prd},${machine.shift2Prd},${total}\n`;
+      });
+      downloadCSV(csv, `stock-report-${formatDateInput(new Date())}.csv`);
+      updateStatus("Stock report exported", "positive");
+    };
+
+    const exportLineAssignmentReport = () => {
+      let csv = "Date,Staff Name,Line,Shift\n";
+      const selectedDate = formatDateInput(new Date());
+      state.lineAssignments.forEach(assign => {
+        if (assign.date === selectedDate) {
+          csv += `${assign.date},${assign.staff},${assign.line},${assign.shift}\n`;
+        }
+      });
+      downloadCSV(csv, `line-assignment-${selectedDate}.csv`);
+      updateStatus("Line assignment report exported", "positive");
+    };
+
+    const exportLineAssignmentMonthlyReport = () => {
+      let csv = "Date,Staff Name,Line,Shift\n";
+      state.lineAssignments.forEach(assign => {
+        csv += `${assign.date},${assign.staff},${assign.line},${assign.shift}\n`;
+      });
+      downloadCSV(csv, `line-assignment-monthly-${new Date().toISOString().slice(0, 7)}.csv`);
+      updateStatus("Monthly line assignment report exported", "positive");
+    };
+
+    const exportMachineAssignmentReport = () => {
+      let csv = "Date,Staff Name,Machine,Shift\n";
+      const selectedDate = formatDateInput(new Date());
+      state.staff.forEach(staff => {
+        if (staff.assignmentDate === selectedDate) {
+          csv += `${staff.assignmentDate},${staff.name},${staff.machine || "N/A"},${staff.shift || "N/A"}\n`;
+        }
+      });
+      downloadCSV(csv, `machine-assignment-${selectedDate}.csv`);
+      updateStatus("Machine assignment report exported", "positive");
+    };
+
+    const exportMachineAssignmentMonthlyReport = () => {
+      let csv = "Date,Staff Name,Machine,Shift\n";
+      state.staff.forEach(staff => {
+        if (staff.assignmentDate) {
+          csv += `${staff.assignmentDate},${staff.name},${staff.machine || "N/A"},${staff.shift || "N/A"}\n`;
+        }
+      });
+      downloadCSV(csv, `machine-assignment-monthly-${new Date().toISOString().slice(0, 7)}.csv`);
+      updateStatus("Monthly machine assignment report exported", "positive");
+    };
+
+    const downloadCSV = (csv, filename) => {
+      const blob = new Blob([csv], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      window.URL.revokeObjectURL(url);
     };
 
     const init = () => {
@@ -3577,9 +3782,26 @@
         }
       }
 
+      // Initialize stock for machines 1-48 if not already done
+      if (!state.stock.length) {
+        for (let i = 1; i <= 48; i++) {
+          state.stock.push({
+            machineNumber: `Machine ${i}`,
+            rpm: 0,
+            beamTotal: 0,
+            balanceBeam: 0,
+            onLoom: 0,
+            onFloor: 0,
+            shift1Prd: 0,
+            shift2Prd: 0
+          });
+        }
+      }
+
       renderStaff();
       renderCategoryFilter();
       renderWorkers();
+      renderStock();
       punchDateInput.value = formatDateInput(new Date());
       lineAssignDate.value = formatDateInput(new Date());
       lineAssignShift.value = getCurrentShift();
@@ -3798,6 +4020,45 @@
       renderRecycleBin();
       updateStatus("Recycle bin emptied.", "neutral");
     });
+
+    // Stock Management Event Listeners
+    if (addMachineBtn) {
+      addMachineBtn.addEventListener("click", addMachine);
+    }
+
+    if (newMachineNumber) {
+      newMachineNumber.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          addMachine();
+        }
+      });
+    }
+
+    if (exportStockReportBtn) {
+      exportStockReportBtn.addEventListener("click", exportStockReport);
+    }
+
+    if (exportLineAssignReportBtn) {
+      exportLineAssignReportBtn.addEventListener("click", () => {
+        const reportType = confirm("Export monthly report? (OK) or daily report? (Cancel)");
+        if (reportType) {
+          exportLineAssignmentMonthlyReport();
+        } else {
+          exportLineAssignmentReport();
+        }
+      });
+    }
+
+    if (exportMachineAssignReportBtn) {
+      exportMachineAssignReportBtn.addEventListener("click", () => {
+        const reportType = confirm("Export monthly report? (OK) or daily report? (Cancel)");
+        if (reportType) {
+          exportMachineAssignmentMonthlyReport();
+        } else {
+          exportMachineAssignmentReport();
+        }
+      });
+    }
 
     navButtons.forEach((button) => {
       button.addEventListener("click", (e) => {
