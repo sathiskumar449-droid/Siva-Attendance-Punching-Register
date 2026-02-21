@@ -111,77 +111,95 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-    /* Colorful theme for each nav button */
-    .nav-link:nth-child(1) {
+    /* Colorful theme for each nav button using data-target */
+    .nav-link[data-target="attendance"] {
       background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
     }
 
-    .nav-link:nth-child(1):hover {
+    .nav-link[data-target="attendance"]:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
     }
 
-    .nav-link:nth-child(2) {
+    .nav-link[data-target="workers"] {
       background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     }
 
-    .nav-link:nth-child(2):hover {
+    .nav-link[data-target="workers"]:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
     }
 
-    .nav-link:nth-child(3) {
+    .nav-link[data-target="line-assign"] {
       background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);
     }
 
-    .nav-link:nth-child(3):hover {
+    .nav-link[data-target="line-assign"]:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(147, 51, 234, 0.3);
     }
 
-    .nav-link:nth-child(4) {
+    .nav-link[data-target="machine-assign"] {
       background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
     }
 
-    .nav-link:nth-child(4):hover {
+    .nav-link[data-target="machine-assign"]:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(234, 88, 12, 0.3);
     }
 
-    .nav-link:nth-child(5) {
+    .nav-link[data-target="totals"] {
       background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
     }
 
-    .nav-link:nth-child(5):hover {
+    .nav-link[data-target="totals"]:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(8, 145, 178, 0.3);
     }
 
-    .nav-link:nth-child(6) {
+    .nav-link[data-target="workers-edit"] {
       background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
     }
 
-    .nav-link:nth-child(6):hover {
+    .nav-link[data-target="workers-edit"]:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(219, 39, 119, 0.3);
     }
 
-    .nav-link:nth-child(7) {
+    .nav-link[data-target="component-mgmt"] {
       background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
     }
 
-    .nav-link:nth-child(7):hover {
+    .nav-link[data-target="component-mgmt"]:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(124, 58, 237, 0.3);
     }
 
-    .nav-link:nth-child(8) {
+    .nav-link[data-target="stock"] {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+
+    .nav-link[data-target="stock"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(245, 158, 11, 0.3);
+    }
+
+    .nav-link[data-target="report"] {
       background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
     }
 
-    .nav-link:nth-child(8):hover {
+    .nav-link[data-target="report"]:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(6, 182, 212, 0.3);
+    }
+
+    .nav-link[data-target="recycle"] {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+
+    .nav-link[data-target="recycle"]:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
     }
 
     .nav-link.active {
