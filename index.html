@@ -656,11 +656,12 @@
         z-index: 30;
         overflow-y: auto;
         overflow-x: hidden;
-        padding: 18px;
+        padding: 14px;
         background: var(--glass-strong);
         border-radius: var(--radius);
         border: 1px solid var(--border);
         backdrop-filter: blur(14px);
+        gap: 8px;
       }
 
       body.drawer-open .sidebar {
@@ -676,6 +677,13 @@
       .nav {
         grid-template-columns: 1fr;
         width: 100%;
+        gap: 6px;
+      }
+
+      .nav-link {
+        padding: 10px 8px;
+        font-size: 0.85rem;
+        min-height: 40px;
       }
 
       .grid {
@@ -737,21 +745,25 @@
         overflow-x: hidden;
       }
 
+      .sidebar {
+        gap: 6px;
+      }
+
       .nav {
         grid-template-columns: 1fr;
-        gap: 8px;
+        gap: 5px;
       }
 
       .nav-link {
-        padding: 11px 9px;
-        font-size: 0.8rem;
-        min-height: 42px;
+        padding: 9px 8px;
+        font-size: 0.75rem;
+        min-height: 38px;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        border-radius: 11px;
-        line-height: 1.2;
+        border-radius: 10px;
+        line-height: 1.15;
         word-wrap: break-word;
         white-space: normal;
       }
@@ -924,36 +936,52 @@
 
     @media (max-width: 480px) {
       body {
-        padding: 10px;
-        padding-bottom: 10px;
+        padding: 8px;
+        padding-bottom: 8px;
         overflow-x: hidden;
       }
 
       .layout {
-        gap: 10px;
+        gap: 8px;
         width: 100%;
         max-width: 100%;
       }
 
+      .sidebar {
+        gap: 4px;
+        padding: 10px;
+      }
+
       header h1 {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         margin: 0;
         word-break: break-word;
         max-width: 100%;
+        letter-spacing: 0;
+      }
+
+      header p {
+        font-size: 0.75rem;
+        margin-top: 2px;
       }
 
       header {
-        padding: 10px 12px;
+        padding: 8px 10px;
         width: 100%;
         box-sizing: border-box;
       }
 
       .card {
-        padding: 10px;
+        padding: 8px;
         width: 100%;
         max-width: 100%;
         display: flex;
         flex-direction: column;
+      }
+
+      label {
+        font-size: 0.8rem;
+        margin-bottom: 4px;
       }
 
       .card > .row {
@@ -1004,21 +1032,21 @@
 
       .nav {
         grid-template-columns: 1fr;
-        gap: 8px;
+        gap: 4px;
         width: 100%;
       }
 
       .nav-link {
-        padding: 10px 8px;
-        font-size: 0.75rem;
+        padding: 8px 7px;
+        font-size: 0.7rem;
         width: 100%;
-        min-height: 40px;
+        min-height: 36px;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        border-radius: 10px;
-        line-height: 1.2;
+        border-radius: 9px;
+        line-height: 1.1;
         word-wrap: break-word;
         white-space: normal;
       }
