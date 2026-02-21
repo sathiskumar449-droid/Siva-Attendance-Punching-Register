@@ -84,17 +84,31 @@
 
     .nav {
       display: grid;
+      grid-template-columns: 1fr;
       gap: 10px;
+      width: 100%;
     }
 
     .nav-link {
       background: rgba(248, 250, 252, 0.7);
       color: var(--text);
       border: 1px solid transparent;
-      text-align: left;
+      border-radius: 12px;
+      text-align: center;
       font-weight: 600;
       position: relative;
       overflow: hidden;
+      padding: 12px 10px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+      line-height: 1.2;
+      word-wrap: break-word;
+      white-space: normal;
     }
 
     .nav-link.active {
@@ -640,6 +654,13 @@
         transform: translateX(-110%);
         transition: transform 0.25s ease;
         z-index: 30;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 18px;
+        background: var(--glass-strong);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(14px);
       }
 
       body.drawer-open .sidebar {
@@ -653,7 +674,7 @@
       }
 
       .nav {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 1fr;
         width: 100%;
       }
 
@@ -714,6 +735,25 @@
         padding: 12px;
         padding-bottom: 12px;
         overflow-x: hidden;
+      }
+
+      .nav {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .nav-link {
+        padding: 11px 9px;
+        font-size: 0.8rem;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border-radius: 11px;
+        line-height: 1.2;
+        word-wrap: break-word;
+        white-space: normal;
       }
 
       .layout {
@@ -963,15 +1003,24 @@
       }
 
       .nav {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 6px;
+        grid-template-columns: 1fr;
+        gap: 8px;
         width: 100%;
       }
 
       .nav-link {
-        padding: 8px 6px;
-        font-size: 0.7rem;
+        padding: 10px 8px;
+        font-size: 0.75rem;
         width: 100%;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border-radius: 10px;
+        line-height: 1.2;
+        word-wrap: break-word;
+        white-space: normal;
       }
 
       .bottom-nav {
