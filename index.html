@@ -714,6 +714,67 @@
       border-color: rgba(220, 38, 38, 0.4);
     }
 
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(6px);
+      z-index: 120;
+      padding: 24px;
+    }
+
+    .login-overlay.hidden {
+      display: none;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--glass-strong);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .login-card h2 {
+      margin: 0 0 6px;
+      font-size: 1.35rem;
+    }
+
+    .login-card p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .login-form {
+      display: grid;
+      gap: 12px;
+    }
+
+    .login-error {
+      color: var(--danger);
+      font-size: 0.88rem;
+      display: none;
+    }
+
+    .login-error.active {
+      display: block;
+    }
+
+    .logout-btn {
+      width: 100%;
+      display: none;
+    }
+
+    body.login-locked {
+      overflow: hidden;
+    }
+
     @keyframes toastIn {
       from {
         opacity: 0;
@@ -1299,6 +1360,27 @@
 </head>
 <body>
   <div id="drawerOverlay" class="drawer-overlay"></div>
+  <div id="loginOverlay" class="login-overlay">
+    <div class="login-card">
+      <h2>PIN Login</h2>
+      <p>Enter your PIN to continue.</p>
+      <form id="loginForm" class="login-form">
+        <div>
+          <label for="loginPin">PIN</label>
+          <input
+            id="loginPin"
+            type="password"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            placeholder="Enter PIN"
+            required
+          />
+        </div>
+        <div id="loginError" class="login-error">Invalid PIN. Please try again.</div>
+        <button id="loginBtn" type="submit">Login</button>
+      </form>
+    </div>
+  </div>
   <div class="layout">
     <aside class="sidebar">
       <div class="brand">Punching System</div>
@@ -1316,14 +1398,14 @@
         <button class="nav-link" data-target="report">Report</button>
         <button class="nav-link" data-target="recycle">Recycle Bin</button>
       </nav>
-      <div class="sidebar-note">Offline-ready once opened.</div>
+      <button id="logoutBtn" class="danger logout-btn">Logout</button>
     </aside>
 
     <main class="app">
       <header>
         <div class="header-bar">
           <div>
-            <h1>Attendance Punching Register</h1>
+            <h1>Register</h1>
             <p>Supervisor view for daily attendance punching.</p>
           </div>
           <div class="header-actions">
@@ -1766,6 +1848,11 @@
     const menuToggle = document.getElementById("menuToggle");
     const drawerOverlay = document.getElementById("drawerOverlay");
     const toastContainer = document.getElementById("toastContainer");
+    const loginOverlay = document.getElementById("loginOverlay");
+    const loginForm = document.getElementById("loginForm");
+    const loginPinInput = document.getElementById("loginPin");
+    const loginError = document.getElementById("loginError");
+    const logoutBtn = document.getElementById("logoutBtn");
 
     const navButtons = document.querySelectorAll(".nav-link");
     const sections = document.querySelectorAll(".section");
@@ -1790,6 +1877,9 @@
     const clearBtn = document.getElementById("clearBtn");
 
     const THEME_KEY = "attendance_theme";
+    const LAST_MACHINE_LINE_KEY = "attendance_last_machine_line";
+    const PIN_CODE = "5683";
+    const LOGIN_KEY = "attendance_pin_auth";
 
     const defaultStaff = [
       { name: "Anitha", category: "General" },
@@ -2650,6 +2740,8 @@
       newLineName.value = "";
       persist();
       renderLineAssignments(); // Full sync including both panels
+      renderMachineAssignment();
+      localStorage.setItem(LAST_MACHINE_LINE_KEY, name);
       updateStatus(`✓ Added new line: "${name}"`, "success");
       showToast(`✓ Added line "${name}"`, "success");
     };
@@ -2675,6 +2767,8 @@
       newLineNameInput.value = "";
       persist();
       renderLineAssignments();
+      renderMachineAssignment();
+      localStorage.setItem(LAST_MACHINE_LINE_KEY, name);
       updateStatus(`✓ Added new line: "${name}"`, "success");
       showToast(`✓ Added line "${name}"`, "success");
     };
@@ -3034,6 +3128,7 @@
             alert("Machine already exists in this line.");
             return;
           }
+          localStorage.setItem(LAST_MACHINE_LINE_KEY, line.name);
           line.machines.push({
             id: Date.now(),
             name: machineName,
@@ -3507,6 +3602,52 @@
       drawerOverlay.classList.toggle("active", open);
     };
 
+    const applyLoginState = (isAuthed) => {
+      if (loginOverlay) {
+        loginOverlay.classList.toggle("hidden", isAuthed);
+      }
+      document.body.classList.toggle("login-locked", !isAuthed);
+      if (logoutBtn) {
+        logoutBtn.style.display = isAuthed ? "block" : "none";
+      }
+      if (!isAuthed && loginPinInput) {
+        loginPinInput.focus();
+      }
+    };
+
+    const handleLogin = () => {
+      if (!loginPinInput) {
+        return;
+      }
+      const pin = loginPinInput.value.trim();
+      if (pin === PIN_CODE) {
+        localStorage.setItem(LOGIN_KEY, "1");
+        if (loginError) {
+          loginError.classList.remove("active");
+        }
+        loginPinInput.value = "";
+        applyLoginState(true);
+        updateStatus("Login successful.", "success");
+        return;
+      }
+      if (loginError) {
+        loginError.classList.add("active");
+      }
+      loginPinInput.select();
+    };
+
+    const handleLogout = () => {
+      localStorage.removeItem(LOGIN_KEY);
+      if (loginError) {
+        loginError.classList.remove("active");
+      }
+      if (loginPinInput) {
+        loginPinInput.value = "";
+      }
+      applyLoginState(false);
+      updateStatus("Logged out.", "neutral");
+    };
+
     const renderAttendanceDetails = () => {
       todayDetails.innerHTML = "";
       if (!state.lastDetails.length) {
@@ -3897,10 +4038,42 @@
         shift1Prd: 0,
         shift2Prd: 0
       });
+
+      const targetLineName = localStorage.getItem(LAST_MACHINE_LINE_KEY);
+      const hasMachine = state.lines.some((line) =>
+        line.machines.some((machine) => machine.name.toLowerCase() === machineNum.toLowerCase())
+      );
+      if (!hasMachine) {
+        let targetLine = null;
+        if (state.lines.length) {
+          if (targetLineName) {
+            targetLine = state.lines.find((line) => line.name === targetLineName) || null;
+          }
+          if (!targetLine) {
+            targetLine = state.lines[0];
+          }
+        } else {
+          targetLine = {
+            id: Date.now(),
+            name: "Line 1",
+            machines: []
+          };
+          state.lines.push(targetLine);
+        }
+
+        targetLine.machines.push({
+          id: Date.now(),
+          name: machineNum,
+          shift: machineAssignShift.value || getCurrentShift(),
+          componentId: ""
+        });
+        localStorage.setItem(LAST_MACHINE_LINE_KEY, targetLine.name);
+      }
       
       newMachineNumber.value = "";
       persist();
       renderStock();
+      renderMachineAssignment();
       updateStatus(`Added ${machineNum}`, "positive");
     };
 
@@ -3984,6 +4157,8 @@
       loadState();
       const savedTheme = localStorage.getItem(THEME_KEY) || "light";
       setTheme(savedTheme);
+      const isAuthed = localStorage.getItem(LOGIN_KEY) === "1";
+      applyLoginState(isAuthed);
 
       // Pre-populate lines and machines if not already done
       if (!state.lines.length) {
@@ -4183,6 +4358,25 @@
       renderRecords();
       renderStaffTotals();
     });
+
+    if (loginForm) {
+      loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        handleLogin();
+      });
+    }
+
+    if (loginPinInput) {
+      loginPinInput.addEventListener("input", () => {
+        if (loginError) {
+          loginError.classList.remove("active");
+        }
+      });
+    }
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", handleLogout);
+    }
 
     menuToggle.addEventListener("click", () => {
       const isOpen = document.body.classList.contains("drawer-open");
