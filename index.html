@@ -379,6 +379,13 @@
       transition: opacity 0.2s ease;
     }
 
+    /* Line Assignment specific styling */
+    #line-assign > div {
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 16px;
+    }
+
     .section.active {
       display: grid;
       opacity: 1;
@@ -628,6 +635,11 @@
 
       table {
         min-width: 560px;
+        font-size: 0.8rem;
+      }
+
+      table th, table td {
+        padding: 8px 6px;
       }
 
       .bottom-nav {
@@ -647,11 +659,103 @@
         backdrop-filter: blur(14px);
         z-index: 25;
       }
+
+      /* Line Assignment Mobile Layout */
+      #line-assign > div {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+      }
+
+      /* Stack Add New Line on mobile */
+      #line-assign > div > div:last-child {
+        order: 3;
+        margin-top: 12px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 12px;
+        padding-bottom: 100px;
+      }
+
+      .card {
+        padding: 14px;
+      }
+
+      header {
+        padding: 14px 16px;
+      }
+
+      header h1 {
+        font-size: 1.4rem;
+        margin-bottom: 4px;
+      }
+
+      header p {
+        font-size: 0.9rem;
+      }
+
+      label {
+        font-size: 0.85rem;
+        margin-bottom: 6px;
+      }
+
+      input, select, button {
+        padding: 10px 12px;
+        font-size: 1rem;
+      }
+
+      table {
+        min-width: 100%;
+        font-size: 0.75rem;
+      }
+
+      table th, table td {
+        padding: 6px 4px;
+      }
+
+      .staff-row {
+        grid-template-columns: 1fr !important;
+        padding: 8px;
+        gap: 6px;
+      }
+
+      .staff-row input, .staff-row select, .staff-row button {
+        width: 100%;
+      }
+
+      .detail-card {
+        grid-template-columns: 1fr;
+      }
+
+      select, input[type="text"], input[type="date"], input[type="time"], input[type="month"] {
+        width: 100%;
+      }
+
+      .control-row {
+        grid-template-columns: 1fr;
+      }
+
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .header-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .icon-btn {
+        width: 36px;
+        height: 36px;
+      }
     }
 
     @media (max-width: 480px) {
       header h1 {
-        font-size: 1.3rem;
+        font-size: 1.2rem;
       }
 
       .staff-add {
@@ -659,7 +763,8 @@
       }
 
       button {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
+        padding: 10px 12px;
       }
 
       .layout {
@@ -668,19 +773,55 @@
 
       .sidebar {
         border-radius: 14px;
+        width: 240px;
       }
+
       .staff-row {
         grid-template-columns: 1fr;
       }
 
       .nav {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .nav-link {
+        padding: 10px 8px;
+        font-size: 0.85rem;
       }
 
       .bottom-nav {
         left: 12px;
         right: 12px;
         bottom: 12px;
+        gap: 6px;
+      }
+
+      .bottom-nav .nav-link {
+        padding: 8px 4px;
+        font-size: 0.75rem;
+      }
+
+      .toast {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+      }
+
+      table {
+        font-size: 0.7rem;
+      }
+
+      table th, table td {
+        padding: 4px 3px;
+      }
+
+      .detail-line {
+        padding: 8px;
+        font-size: 0.8rem;
+      }
+
+      .row {
+        margin-bottom: 12px;
       }
     }
   </style>
