@@ -1,0 +1,3230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Attendance Punching Register</title>
+  <style>
+    :root {
+      --bg: #eef2f8;
+      --bg-2: #f9fbff;
+      --card: rgba(255, 255, 255, 0.75);
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #16a34a;
+      --accent-2: #2563eb;
+      --danger: #dc2626;
+      --border: rgba(148, 163, 184, 0.35);
+      --shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+      --glass: rgba(255, 255, 255, 0.65);
+      --glass-strong: rgba(255, 255, 255, 0.8);
+      --gradient-in: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+      --gradient-out: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+      --gradient-danger: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+      --radius: 16px;
+    }
+
+    body.theme-dark {
+      --bg: #0b1120;
+      --bg-2: #0f172a;
+      --card: rgba(15, 23, 42, 0.75);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.2);
+      --shadow: 0 24px 60px rgba(2, 6, 23, 0.5);
+      --glass: rgba(15, 23, 42, 0.6);
+      --glass-strong: rgba(15, 23, 42, 0.8);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Poppins", "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, rgba(59, 130, 246, 0.2), transparent 55%),
+        radial-gradient(circle at 20% 30%, rgba(34, 197, 94, 0.18), transparent 50%),
+        linear-gradient(160deg, var(--bg), var(--bg-2));
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .layout {
+      max-width: 1140px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 18px;
+      align-self: start;
+      background: var(--glass-strong);
+      border-radius: var(--radius);
+      padding: 18px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      display: grid;
+      gap: 14px;
+    }
+
+    .brand {
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .nav {
+      display: grid;
+      gap: 10px;
+    }
+
+    .nav-link {
+      background: rgba(248, 250, 252, 0.7);
+      color: var(--text);
+      border: 1px solid transparent;
+      text-align: left;
+      font-weight: 600;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-link.active {
+      background: rgba(34, 197, 94, 0.16);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: #16a34a;
+    }
+
+    .sidebar-note {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .app {
+      display: grid;
+      gap: 20px;
+    }
+
+    header {
+      background: var(--glass-strong);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+    }
+
+    header h1 {
+      margin: 0 0 6px;
+      font-size: 1.6rem;
+      letter-spacing: 0.2px;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--glass);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 40px rgba(12, 18, 28, 0.12);
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.92rem;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    select,
+    input[type="text"],
+    input[type="date"],
+    input[type="time"],
+    input[type="month"],
+    button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      font-size: 1rem;
+      font-family: inherit;
+    }
+
+    input:disabled {
+      background: #f2f4f8;
+      color: #8a97a8;
+      border-color: #e2e8f0;
+    }
+
+    select:focus,
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    input[type="time"]:focus,
+    input[type="month"]:focus {
+      outline: 2px solid rgba(46, 125, 50, 0.2);
+      border-color: var(--accent);
+    }
+
+    .row {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .control-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    .time-edit {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      align-items: end;
+      margin-top: 8px;
+    }
+
+    .time-edit.active {
+      display: grid;
+    }
+
+    .time-edit-note {
+      display: none;
+      margin-top: 8px;
+    }
+
+    .time-edit-note.active {
+      display: block;
+    }
+
+    button {
+      background: var(--gradient-in);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button.secondary {
+      background: var(--gradient-out);
+    }
+
+    button.danger {
+      background: var(--gradient-danger);
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.99);
+    }
+
+    button:hover {
+      box-shadow: 0 12px 26px rgba(34, 197, 94, 0.25);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+      background: var(--border);
+    }
+
+    button.secondary:hover {
+      box-shadow: 0 12px 26px rgba(37, 99, 235, 0.25);
+    }
+
+    button.danger:hover {
+      box-shadow: 0 12px 26px rgba(220, 38, 38, 0.25);
+    }
+
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .btn-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      transform: scale(0);
+      animation: ripple 0.6s ease-out;
+      background: rgba(255, 255, 255, 0.5);
+      pointer-events: none;
+    }
+
+    @keyframes ripple {
+      to {
+        transform: scale(2.5);
+        opacity: 0;
+      }
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .staff-add {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .staff-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .staff-row {
+      display: grid;
+      grid-template-columns: minmax(160px, 1.4fr) minmax(140px, 1.2fr) minmax(90px, auto) minmax(90px, auto);
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f9fbff;
+    }
+
+    .staff-row input {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .staff-row button {
+      padding: 10px 12px;
+      width: 100%;
+      min-width: 90px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      min-width: 720px;
+    }
+
+    th,
+    td {
+      padding: 12px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      background: #f6f8fb;
+      font-weight: 600;
+    }
+
+    tbody tr:hover {
+      background: #f9fbff;
+    }
+
+    .footer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section {
+      display: none;
+      gap: 20px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .section.active {
+      display: grid;
+      opacity: 1;
+      animation: fadeSlide 0.3s ease;
+    }
+
+    @keyframes fadeSlide {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #e8f5e9;
+      color: #1b5e20;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+    }
+
+    .chip.neutral {
+      background: #eef3f8;
+      color: #415063;
+    }
+
+    .chip.success {
+      background: #e8f5e9;
+      color: #1b5e20;
+    }
+
+    .chip.danger {
+      background: #ffebee;
+      color: #b71c1c;
+    }
+
+    .today-details {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .detail-card {
+      background: #f7f9fc;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 10px;
+      font-size: 0.9rem;
+    }
+
+    .detail-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .detail-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px dashed var(--border);
+      background: rgba(248, 250, 252, 0.7);
+      font-size: 0.9rem;
+    }
+
+    .detail-line span {
+      color: var(--muted);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.8rem;
+    }
+
+    .status-pill.in {
+      background: rgba(34, 197, 94, 0.18);
+      color: #16a34a;
+    }
+
+    .status-pill.out {
+      background: rgba(239, 68, 68, 0.18);
+      color: #dc2626;
+    }
+
+    .header-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--glass);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow);
+    }
+
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(2px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 20;
+    }
+
+    .drawer-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .bottom-nav {
+      display: none;
+      position: fixed;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      background: var(--glass-strong);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 10px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(14px);
+      z-index: 30;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .bottom-nav .nav-link {
+      text-align: center;
+      font-size: 0.85rem;
+      padding: 10px 6px;
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      display: grid;
+      gap: 10px;
+      z-index: 50;
+    }
+
+    .toast {
+      background: var(--glass-strong);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 12px 14px;
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      animation: toastIn 0.35s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      backdrop-filter: blur(14px);
+    }
+
+    .toast.success {
+      border-color: rgba(34, 197, 94, 0.4);
+    }
+
+    .toast.danger {
+      border-color: rgba(220, 38, 38, 0.4);
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (max-width: 860px) {
+      body {
+        padding: 18px;
+        padding-bottom: 110px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: fixed;
+        top: 12px;
+        left: 12px;
+        height: calc(100vh - 24px);
+        width: 260px;
+        transform: translateX(-110%);
+        transition: transform 0.25s ease;
+        z-index: 30;
+      }
+
+      body.drawer-open .sidebar {
+        transform: translateX(0);
+      }
+
+      .nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        min-width: 560px;
+      }
+
+      .bottom-nav {
+        display: grid;
+      }
+
+      .actions.action-bar {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        bottom: 92px;
+        background: var(--glass-strong);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 10px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(14px);
+        z-index: 25;
+      }
+    }
+
+    @media (max-width: 480px) {
+      header h1 {
+        font-size: 1.3rem;
+      }
+
+      .staff-add {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        font-size: 0.95rem;
+      }
+
+      .layout {
+        gap: 12px;
+      }
+
+      .sidebar {
+        border-radius: 14px;
+      }
+      .staff-row {
+        grid-template-columns: 1fr;
+      }
+
+      .nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .bottom-nav {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="drawerOverlay" class="drawer-overlay"></div>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">Punching System</div>
+      <nav class="nav">
+        <button class="nav-link active" data-target="attendance">Attendance</button>
+        <button class="nav-link" data-target="workers">Workers</button>
+        <button class="nav-link" data-target="line-assign">Line Assignment</button>
+        <button class="nav-link" data-target="machine-assign">Machine Assignment</button>
+        <button class="nav-link" data-target="totals">Total Working Hours</button>
+      </nav>
+      <nav class="nav">
+        <button class="nav-link" data-target="workers-edit">Workers Edit</button>
+        <button class="nav-link" data-target="component-mgmt">Component Mgmt</button>
+        <button class="nav-link" data-target="report">Report</button>
+        <button class="nav-link" data-target="recycle">Recycle Bin</button>
+      </nav>
+      <div class="sidebar-note">Offline-ready once opened.</div>
+    </aside>
+
+    <main class="app">
+      <header>
+        <div class="header-bar">
+          <div>
+            <h1>Attendance Punching Register</h1>
+            <p>Supervisor view for daily attendance punching.</p>
+          </div>
+          <div class="header-actions">
+            <button id="menuToggle" class="icon-btn" aria-label="Open navigation">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <section id="workers" class="section">
+        <section class="card">
+          <label>Workers</label>
+          <p class="muted" style="margin-top: 4px;">Worker name and domain details.</p>
+          <div class="table-wrap" style="margin-top: 12px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Worker Name</th>
+                  <th>Domain Category</th>
+                </tr>
+              </thead>
+              <tbody id="workersBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="workers-edit" class="section">
+        <section class="grid">
+          <div class="card">
+            <label>Add Worker</label>
+            <div class="staff-add">
+              <div>
+                <label for="newStaff">Worker Name</label>
+                <input id="newStaff" type="text" placeholder="Enter worker name" />
+              </div>
+              <div>
+                <label for="newCategory">Domain Category</label>
+                <input id="newCategory" type="text" placeholder="Enter category" />
+              </div>
+              <button id="addStaffBtn">Add</button>
+            </div>
+            <p class="muted">Tip: Names and categories are saved in your browser.</p>
+          </div>
+
+          <div class="card">
+            <label>Edit Workers</label>
+            <div id="staffEditList" class="staff-list"></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="line-assign" class="section">
+        <div style="display: grid; grid-template-columns: 1fr 350px; gap: 16px;">
+          <!-- Left: Date, Shift, and Line Assignment Table -->
+          <div>
+            <!-- Common Date and Shift Selection at Top -->
+            <div class="card" style="margin-bottom: 16px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div class="row" style="padding: 0; margin: 0;">
+                  <label for="lineAssignDate">Select Date</label>
+                  <input id="lineAssignDate" type="date" />
+                </div>
+                <div class="row" style="padding: 0; margin: 0;">
+                  <label for="lineAssignShift">Shift</label>
+                  <select id="lineAssignShift">
+                    <option value="shift1">Shift 1 (8AM-8PM)</option>
+                    <option value="shift2">Shift 2 (8PM-8AM)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Line Assignment Table (Spreadsheet Style) -->
+            <div class="card">
+              <label>Line Assignments</label>
+              <p class="muted" style="margin-top: 4px;">Select staff and assign to lines.</p>
+              
+              <div style="overflow-x: auto; margin-top: 16px;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem; border: 1px solid rgba(0, 0, 0, 0.1);">
+                  <thead>
+                    <tr style="background: rgba(34, 197, 94, 0.08);">
+                      <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text); border: 1px solid rgba(0, 0, 0, 0.1);">Staff name</th>
+                      <th style="padding: 12px; text-align: left; font-weight: 600; color: var(--text); border: 1px solid rgba(0, 0, 0, 0.1);">Line</th>
+                    </tr>
+                  </thead>
+                  <tbody id="lineAssignmentSpreadsheetBody">
+                    <tr>
+                      <td colspan="2" style="padding: 20px; text-align: center; color: var(--muted);">Loading...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Add New Line -->
+          <div class="card" style="height: fit-content;">
+            <label style="margin-bottom: 12px;">Add New Line</label>
+            <p class="muted" style="margin: 0 0 16px 0; font-size: 0.85rem;">Create new production lines as needed.</p>
+            <div>
+              <label for="newLineNameInput" style="font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; display: block; color: var(--text);">Line Name</label>
+              <input 
+                id="newLineNameInput" 
+                type="text" 
+                placeholder="e.g., Line 9, Line 10" 
+                style="width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 10px; background: white; font-size: 0.95rem; box-sizing: border-box; margin-bottom: 12px;" 
+              />
+              <button id="addLineInAssignBtn" style="width: 100%; padding: 12px 0;">Add Line</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      </section>
+
+      <section id="machine-assign" class="section">
+        <div class="card" style="margin-bottom: 16px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div class="row" style="padding: 0; margin: 0;">
+              <label for="machineAssignDate">Select Date</label>
+              <input id="machineAssignDate" type="date" />
+            </div>
+            <div class="row" style="padding: 0; margin: 0;">
+              <label for="machineAssignShift">Shift</label>
+              <select id="machineAssignShift">
+                <option value="shift1">Shift 1 (8AM-8PM)</option>
+                <option value="shift2">Shift 2 (8PM-8AM)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <section class="grid">
+          <div class="card">
+            <label>Machine Assignment</label>
+            <p class="muted" style="margin-top: 4px;">Manage machines grouped by production lines.</p>
+            <div id="machineAssignList" class="staff-list"></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="component-mgmt" class="section">
+        <section class="grid">
+          <div class="card">
+            <label>Component Management</label>
+            <p class="muted" style="margin-top: 4px;">Add and manage component names.</p>
+            <div class="staff-add">
+              <div>
+                <label for="newComponentName">Component Name</label>
+                <input id="newComponentName" type="text" placeholder="Enter component name" />
+              </div>
+              <button id="addComponentBtn">Add</button>
+            </div>
+            <p class="muted">Tip: Components are saved in your browser.</p>
+            <div id="componentList" class="staff-list"></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="attendance" class="section active">
+        <section class="grid">
+          <div class="card">
+            <div class="row">
+              <label for="staffSelect">Select Staff</label>
+              <select id="staffSelect"></select>
+            </div>
+
+            <div class="control-row">
+              <div>
+                <label for="punchDate">Select Date</label>
+                <input id="punchDate" type="date" />
+              </div>
+            </div>
+            <div id="timeEditBlock" class="time-edit">
+              <div>
+                <label for="punchInTime">Punch In Time</label>
+                <input id="punchInTime" type="time" step="1" placeholder="HH:MM:SS" />
+              </div>
+              <div>
+                <label for="punchOutTime">Punch Out Time</label>
+                <input id="punchOutTime" type="time" step="1" placeholder="HH:MM:SS" />
+              </div>
+            </div>
+            <p id="timeEditNote" class="muted time-edit-note">Time edit only when date is not today.</p>
+
+            <div class="actions action-bar">
+              <button id="punchInBtn" class="btn-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 5v14"></path>
+                  <path d="M5 12h14"></path>
+                </svg>
+                Punch In
+              </button>
+              <button id="punchOutBtn" class="secondary btn-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M5 12h14"></path>
+                </svg>
+                Punch Out
+              </button>
+            </div>
+
+          </div>
+
+          <div class="card">
+            <label>Today Status</label>
+            <div class="row">
+              <span id="lastAction" class="chip neutral">No punches yet</span>
+              <span class="muted" id="currentTime">--</span>
+            </div>
+            <p class="muted">Selected date is used for punching. Time edit shows only when date changes.</p>
+            <div id="todayDetails" class="today-details"></div>
+          </div>
+        </section>
+      </section>
+
+      <section id="report" class="section">
+        <section class="card">
+          <div class="control-row" style="margin-bottom: 12px;">
+            <div>
+              <label for="reportDate">Date Wise Report</label>
+              <input id="reportDate" type="date" />
+            </div>
+            <div>
+              <label for="reportMonth">Monthly Report</label>
+              <input id="reportMonth" type="month" />
+            </div>
+            <div>
+              <label for="reportCategory">Category Filter</label>
+              <select id="reportCategory"></select>
+            </div>
+          </div>
+          <div class="footer-actions" style="margin-bottom: 12px;">
+            <button id="exportBtn" class="secondary">Export to CSV</button>
+            <button id="clearBtn" class="danger">Clear All</button>
+          </div>
+          <p class="muted" style="margin-top: 0;">Data stays after refresh. Use export for reports.</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Staff Name</th>
+                  <th>Category</th>
+                  <th>Punch In Time</th>
+                  <th>Punch Out Time</th>
+                  <th>Total Hours</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="recordsBody"></tbody>
+            </table>
+          </div>
+          <div style="height: 18px;"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Staff Name</th>
+                  <th>Category</th>
+                  <th>Day Total</th>
+                  <th>Month Total</th>
+                </tr>
+              </thead>
+              <tbody id="staffTotalsBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="totals" class="section">
+        <section class="grid">
+          <div class="card">
+            <label>Total Working Hours Summary</label>
+            <p class="muted" style="margin-top: 4px;">Shows total hours for each staff from all records.</p>
+            <div class="table-wrap" style="margin-top: 12px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Staff Name</th>
+                    <th>Total Hours</th>
+                  </tr>
+                </thead>
+                <tbody id="totalsBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card">
+            <label>Grand Total</label>
+            <div class="row">
+              <span id="grandTotal" class="chip">00:00:00</span>
+              <span class="muted">All staff combined</span>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section id="recycle" class="section">
+        <section class="card">
+          <label>Recycle Bin</label>
+          <p class="muted" style="margin-top: 4px;">Deleted attendance records can be restored or removed permanently.</p>
+          <div class="footer-actions" style="margin: 12px 0;">
+            <button id="restoreBinBtn" class="secondary">Restore All</button>
+            <button id="emptyBinBtn" class="danger">Empty Bin</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Staff Name</th>
+                  <th>Category</th>
+                  <th>Punch In</th>
+                  <th>Punch Out</th>
+                  <th>Date</th>
+                  <th>Deleted At</th>
+                </tr>
+              </thead>
+              <tbody id="recycleBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-link active" data-target="attendance">Attendance</button>
+    <button class="nav-link" data-target="workers">Workers</button>
+    <button class="nav-link" data-target="line-assign">Lines</button>
+    <button class="nav-link" data-target="machine-assign">Machines</button>
+    <button class="nav-link" data-target="totals">Totals</button>
+    <button class="nav-link" data-target="workers-edit">Edit</button>
+  </nav>
+
+  <div id="toastContainer" class="toast-container"></div>
+
+  <script>
+    const STORAGE_KEYS = {
+      staff: "attendance_staff",
+      records: "attendance_records",
+      lastDetail: "attendance_last_detail",
+      lastDetails: "attendance_last_details",
+      recycle: "attendance_recycle",
+      machines: "attendance_machines",
+      lines: "attendance_lines",
+      components: "attendance_components"
+    };
+
+    const staffSelect = document.getElementById("staffSelect");
+    const recordsBody = document.getElementById("recordsBody");
+    const lastAction = document.getElementById("lastAction");
+    const currentTime = document.getElementById("currentTime");
+    const punchDateInput = document.getElementById("punchDate");
+    const timeEditBlock = document.getElementById("timeEditBlock");
+    const timeEditNote = document.getElementById("timeEditNote");
+    const punchInTimeInput = document.getElementById("punchInTime");
+    const punchOutTimeInput = document.getElementById("punchOutTime");
+    const reportDateInput = document.getElementById("reportDate");
+    const reportMonthInput = document.getElementById("reportMonth");
+    const reportCategorySelect = document.getElementById("reportCategory");
+    const totalsBody = document.getElementById("totalsBody");
+    const grandTotal = document.getElementById("grandTotal");
+    const staffTotalsBody = document.getElementById("staffTotalsBody");
+    const workersBody = document.getElementById("workersBody");
+    const staffEditList = document.getElementById("staffEditList");
+    const assignmentList = document.getElementById("assignmentList");
+    // const lineAssignStaffSelect = document.getElementById("lineAssignStaffSelect");
+    // const lineAssignLineSelect = document.getElementById("lineAssignLineSelect");
+    // const addLineAssignmentBtn = document.getElementById("addLineAssignmentBtn");
+    const newLineName = document.getElementById("newLineName");
+    const addLineBtn = document.getElementById("addLineBtn");
+    const lineManagementList = document.getElementById("lineManagementList");
+    const lineAssignmentSpreadsheetBody = document.getElementById("lineAssignmentSpreadsheetBody");
+    const newLineNameInput = document.getElementById("newLineNameInput");
+    const addLineInAssignBtn = document.getElementById("addLineInAssignBtn");
+    const machineAssignList = document.getElementById("machineAssignList");
+    const componentList = document.getElementById("componentList");
+    const lineAssignDate = document.getElementById("lineAssignDate");
+    const lineAssignShift = document.getElementById("lineAssignShift");
+    const machineAssignDate = document.getElementById("machineAssignDate");
+    const machineAssignShift = document.getElementById("machineAssignShift");
+    const todayDetails = document.getElementById("todayDetails");
+    const recycleBody = document.getElementById("recycleBody");
+    const restoreBinBtn = document.getElementById("restoreBinBtn");
+    const emptyBinBtn = document.getElementById("emptyBinBtn");
+    const menuToggle = document.getElementById("menuToggle");
+    const drawerOverlay = document.getElementById("drawerOverlay");
+    const toastContainer = document.getElementById("toastContainer");
+
+    const navButtons = document.querySelectorAll(".nav-link");
+    const sections = document.querySelectorAll(".section");
+
+    const newStaffInput = document.getElementById("newStaff");
+    const newCategoryInput = document.getElementById("newCategory");
+    const addStaffBtn = document.getElementById("addStaffBtn");
+    const newComponentNameInput = document.getElementById("newComponentName");
+    const addComponentBtn = document.getElementById("addComponentBtn");
+
+    const punchInBtn = document.getElementById("punchInBtn");
+    const punchOutBtn = document.getElementById("punchOutBtn");
+    const exportBtn = document.getElementById("exportBtn");
+    const clearBtn = document.getElementById("clearBtn");
+
+    const THEME_KEY = "attendance_theme";
+
+    const defaultStaff = [
+      { name: "Anitha", category: "General" },
+      { name: "Bala", category: "Production" },
+      { name: "Karthik", category: "Warehouse" },
+      { name: "Meena", category: "Office" },
+      { name: "Ravi", category: "Delivery" }
+    ];
+
+    const state = {
+      staff: [],
+      records: [],
+      lastDetails: [],
+      recycle: [],
+      machines: [],
+      lines: [],
+      components: [],
+      lineAssignments: []
+    };
+
+    const formatDate = (date) => {
+      return date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+      });
+    };
+
+    const formatTime = (date) => {
+      return date.toLocaleTimeString("en-GB", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+    };
+
+    const formatDateInput = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    };
+
+    const formatMonthInput = (date) => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      return `${year}-${month}`;
+    };
+
+    const parseDateString = (dateStr) => {
+      const [day, month, year] = dateStr.split("/").map(Number);
+      return new Date(year, month - 1, day);
+    };
+
+    const getSelectedDate = () => {
+      const value = punchDateInput.value || formatDateInput(new Date());
+      const [year, month, day] = value.split("-").map(Number);
+      return new Date(year, month - 1, day);
+    };
+
+    const getSelectedReportDate = () => {
+      if (!reportDateInput.value) {
+        return "";
+      }
+      const [year, month, day] = reportDateInput.value.split("-").map(Number);
+      return formatDate(new Date(year, month - 1, day));
+    };
+
+    const getSelectedReportMonth = () => {
+      if (!reportMonthInput.value) {
+        return "";
+      }
+      return reportMonthInput.value;
+    };
+
+    const normalizeTimeInput = (value) => {
+      if (!value) {
+        return "";
+      }
+      if (value.length === 5) {
+        return `${value}:00`;
+      }
+      return value;
+    };
+
+    const isTodaySelected = () => {
+      const today = formatDateInput(new Date());
+      const selected = punchDateInput.value || today;
+      return selected === today;
+    };
+
+    const updateTimeEditVisibility = () => {
+      const allowEdit = !isTodaySelected();
+      timeEditBlock.classList.toggle("active", allowEdit);
+      timeEditNote.classList.toggle("active", allowEdit);
+      punchInTimeInput.disabled = !allowEdit;
+      punchOutTimeInput.disabled = !allowEdit;
+      if (!allowEdit) {
+        punchInTimeInput.value = "";
+        punchOutTimeInput.value = "";
+      }
+    };
+
+    const buildDateTime = (dateStr, timeStr) => {
+      if (!dateStr || !timeStr) {
+        return null;
+      }
+      const date = parseDateString(dateStr);
+      const [hour, minute, second] = timeStr.split(":").map(Number);
+      return new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        hour || 0,
+        minute || 0,
+        second || 0
+      );
+    };
+
+    const formatDuration = (ms) => {
+      if (!Number.isFinite(ms) || ms <= 0) {
+        return "";
+      }
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+      const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+      const seconds = String(totalSeconds % 60).padStart(2, "0");
+      return `${hours}:${minutes}:${seconds}`;
+    };
+
+    const getRecordDurationMs = (record) => {
+      if (!record.punchIn || !record.punchOut) {
+        return 0;
+      }
+      const inTime = buildDateTime(record.date, record.punchIn);
+      const outTime = buildDateTime(record.date, record.punchOut);
+      if (!inTime || !outTime) {
+        return 0;
+      }
+      const diff = outTime.getTime() - inTime.getTime();
+      return diff > 0 ? diff : 0;
+    };
+
+    const persist = () => {
+      localStorage.setItem(STORAGE_KEYS.staff, JSON.stringify(state.staff));
+      localStorage.setItem(STORAGE_KEYS.records, JSON.stringify(state.records));
+      localStorage.setItem(STORAGE_KEYS.lastDetails, JSON.stringify(state.lastDetails));
+      localStorage.setItem(STORAGE_KEYS.recycle, JSON.stringify(state.recycle));
+      localStorage.setItem(STORAGE_KEYS.machines, JSON.stringify(state.machines));
+      localStorage.setItem(STORAGE_KEYS.lines, JSON.stringify(state.lines));
+      localStorage.setItem(STORAGE_KEYS.components, JSON.stringify(state.components));
+      localStorage.setItem("attendance_line_assignments", JSON.stringify(state.lineAssignments));
+    };
+
+    const loadState = () => {
+      const staffSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.staff) || "null");
+      const recordsSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.records) || "null");
+      const lastDetailSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.lastDetail) || "null");
+      const lastDetailsSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.lastDetails) || "null");
+      const recycleSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.recycle) || "null");
+      const machinesSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.machines) || "null");
+      const linesSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.lines) || "null");
+      const componentsSaved = JSON.parse(localStorage.getItem(STORAGE_KEYS.components) || "null");
+      const lineAssignmentsSaved = JSON.parse(localStorage.getItem("attendance_line_assignments") || "null");
+
+      if (Array.isArray(staffSaved) && staffSaved.length) {
+        state.staff = staffSaved
+          .map((item) => {
+            if (typeof item === "string") {
+              return { name: item, category: "General" };
+            }
+            return {
+              name: item.name || "",
+              category: item.category || "General",
+              line: item.line || "",
+              machine: item.machine || ""
+            };
+          })
+          .filter((item) => item.name);
+      } else {
+        state.staff = defaultStaff.map((item) => ({
+          ...item,
+          line: "",
+          machine: ""
+        }));
+      }
+      state.records = Array.isArray(recordsSaved) ? recordsSaved : [];
+      state.records = state.records.map((record) => ({
+        ...record,
+        category: record.category || (record.staff ? getStaffCategory(record.staff) : "General")
+      }));
+      if (Array.isArray(lastDetailsSaved)) {
+        state.lastDetails = lastDetailsSaved;
+      } else if (lastDetailSaved && lastDetailSaved.staff) {
+        state.lastDetails = [lastDetailSaved];
+      } else {
+        state.lastDetails = [];
+      }
+      state.recycle = Array.isArray(recycleSaved) ? recycleSaved : [];
+      state.machines = Array.isArray(machinesSaved) ? machinesSaved : [];
+      state.lines = Array.isArray(linesSaved) ? linesSaved : [];
+      state.components = Array.isArray(componentsSaved) ? componentsSaved : [];
+      state.lineAssignments = Array.isArray(lineAssignmentsSaved) ? lineAssignmentsSaved : [];
+    };
+
+    const renderStaff = () => {
+      staffSelect.innerHTML = "";
+      state.staff.forEach((staff) => {
+        const option = document.createElement("option");
+        option.value = staff.name;
+        option.textContent = staff.name;
+        staffSelect.appendChild(option);
+      });
+    };
+
+    const renderWorkers = () => {
+      workersBody.innerHTML = "";
+      if (!state.staff.length) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 2;
+        cell.textContent = "No workers added yet.";
+        cell.className = "muted";
+        row.appendChild(cell);
+        workersBody.appendChild(row);
+        return;
+      }
+
+      state.staff
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .forEach((staff) => {
+          const row = document.createElement("tr");
+          [staff.name, staff.category || "General"].forEach((value) => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
+          workersBody.appendChild(row);
+        });
+    };
+
+      const renderWorkersEdit = () => {
+        staffEditList.innerHTML = "";
+        if (!state.staff.length) {
+          const empty = document.createElement("div");
+          empty.className = "muted";
+          empty.textContent = "No workers added yet.";
+          staffEditList.appendChild(empty);
+          return;
+        }
+
+        state.staff
+          .slice()
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .forEach((staff) => {
+            const row = document.createElement("div");
+            row.className = "staff-row";
+
+            const nameInput = document.createElement("input");
+            nameInput.type = "text";
+            nameInput.value = staff.name;
+
+            const categoryInput = document.createElement("input");
+            categoryInput.type = "text";
+            categoryInput.value = staff.category || "General";
+
+            const saveBtn = document.createElement("button");
+            saveBtn.textContent = "Save";
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Remove";
+            deleteBtn.className = "danger";
+
+            const applyWorkerUpdate = () => {
+              const updatedName = nameInput.value.trim();
+              const updatedCategory = categoryInput.value.trim() || "General";
+              if (!updatedName) {
+                alert("Worker name cannot be empty.");
+                nameInput.value = staff.name;
+                return;
+              }
+              if (
+                updatedName !== staff.name &&
+                state.staff.some((item) => item.name === updatedName)
+              ) {
+                alert("Worker name already exists.");
+                nameInput.value = staff.name;
+                return;
+              }
+
+              state.records = state.records.map((record) => {
+                if (record.staff !== staff.name) {
+                  return record;
+                }
+                return {
+                  ...record,
+                  staff: updatedName,
+                  category: updatedCategory
+                };
+              });
+
+              staff.name = updatedName;
+              staff.category = updatedCategory;
+              persist();
+              renderStaff();
+              renderCategoryFilter();
+              renderRecords();
+              renderTotals();
+              renderStaffTotals();
+              renderWorkers();
+              renderWorkersEdit();
+              renderLineAssignments();
+              updateStatus(`Updated worker: ${updatedName}`, "neutral");
+            };
+
+            saveBtn.addEventListener("click", applyWorkerUpdate);
+
+            deleteBtn.addEventListener("click", () => {
+              if (!confirm(`Remove ${staff.name} and related records?`)) {
+                return;
+              }
+              const removedRecords = state.records.filter((record) => record.staff === staff.name);
+              if (removedRecords.length) {
+                const deletedAt = new Date().toLocaleString("en-GB");
+                state.recycle = state.recycle.concat(
+                  removedRecords.map((record) => ({
+                    ...record,
+                    deletedAt
+                  }))
+                );
+              }
+              state.staff = state.staff.filter((item) => item.name !== staff.name);
+              state.records = state.records.filter((record) => record.staff !== staff.name);
+              persist();
+              renderStaff();
+              renderCategoryFilter();
+              renderRecords();
+              renderTotals();
+              renderStaffTotals();
+              renderWorkers();
+              renderWorkersEdit();
+              renderRecycleBin();
+              updateStatus(`Removed worker: ${staff.name}`, "neutral");
+            });
+
+            row.appendChild(nameInput);
+            row.appendChild(categoryInput);
+            row.appendChild(saveBtn);
+            row.appendChild(deleteBtn);
+            staffEditList.appendChild(row);
+          });
+      };
+
+    const renderCategoryFilter = () => {
+      const categories = [
+        ...new Set(state.staff.map((staff) => staff.category).filter(Boolean))
+      ].sort((a, b) => a.localeCompare(b));
+
+      reportCategorySelect.innerHTML = "";
+      const allOption = document.createElement("option");
+      allOption.value = "";
+      allOption.textContent = "All Categories";
+      reportCategorySelect.appendChild(allOption);
+
+      categories.forEach((category) => {
+        const option = document.createElement("option");
+        option.value = category;
+        option.textContent = category;
+        reportCategorySelect.appendChild(option);
+      });
+    };
+
+    // Removed: renderLineAssignmentSelectors - no longer needed with table interface
+    /*
+    const renderLineAssignmentSelectors = () => {
+      // Populate right side staff dropdown (assign page)
+      lineAssignStaffSelect.innerHTML = '<option value="">Select Staff</option>';
+      state.staff
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .forEach((staff) => {
+          const option = document.createElement("option");
+          option.value = staff.name;
+          option.textContent = staff.name;
+          lineAssignStaffSelect.appendChild(option);
+        });
+      
+      // Populate line dropdown from state.lines (Lines 1-8 + custom lines)
+      lineAssignLineSelect.innerHTML = '<option value="">Select Line</option>';
+      
+      // Add default Lines 1-8
+      for (let i = 1; i <= 8; i++) {
+        const option = document.createElement("option");
+        option.value = `Line ${i}`;
+        option.textContent = `Line ${i}`;
+        lineAssignLineSelect.appendChild(option);
+      }
+      
+      // Add custom lines from state.lines
+      state.lines
+        .filter((line) => !line.name.match(/^Line [1-8]$/))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .forEach((line) => {
+          const option = document.createElement("option");
+          option.value = line.name;
+          option.textContent = line.name;
+          lineAssignLineSelect.appendChild(option);
+        });
+      
+      // Removed: Populate left side staff dropdown (manage lines page) - feature removed
+      
+      // Update Assign button state
+      updateAssignButtonState();
+    };
+    
+    const updateAssignButtonState = () => {
+      const staffSelected = lineAssignStaffSelect.value.trim() !== "";
+      const lineSelected = lineAssignLineSelect.value.trim() !== "";
+      addLineAssignmentBtn.disabled = !(staffSelected && lineSelected);
+    };
+    */
+
+
+    const renderLineAssignmentsList = () => {
+      if (!assignmentList) return; // Element removed from layout
+      assignmentList.innerHTML = "";
+      const assignments = state.staff.filter((s) => s.line);
+      
+      if (!assignments.length) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "No assignments yet.";
+        assignmentList.appendChild(empty);
+        return;
+      }
+
+      assignments
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .forEach((staff) => {
+          const row = document.createElement("div");
+          row.className = "staff-row";
+          row.style.padding = "12px";
+          row.style.backgroundColor = "rgba(248, 250, 252, 0.3)";
+          row.style.borderRadius = "8px";
+          row.style.display = "flex";
+          row.style.alignItems = "center";
+          row.style.gap = "12px";
+          row.style.flexWrap = "wrap";
+
+          const nameLabel = document.createElement("span");
+          nameLabel.textContent = staff.name;
+          nameLabel.style.fontWeight = "600";
+          nameLabel.style.minWidth = "120px";
+
+          const lineLabel = document.createElement("span");
+          lineLabel.textContent = staff.line;
+          lineLabel.style.color = "var(--accent)";
+          lineLabel.style.fontWeight = "500";
+          lineLabel.style.padding = "4px 10px";
+          lineLabel.style.backgroundColor = "rgba(34, 197, 94, 0.1)";
+          lineLabel.style.borderRadius = "6px";
+          lineLabel.style.fontSize = "0.9rem";
+
+          const shiftLabel = document.createElement("span");
+          shiftLabel.textContent = staff.shift === "shift2" ? "Shift 2" : "Shift 1";
+          shiftLabel.style.fontSize = "0.85rem";
+          shiftLabel.style.color = "var(--muted)";
+          shiftLabel.style.padding = "4px 10px";
+          shiftLabel.style.backgroundColor = "rgba(100, 116, 139, 0.1)";
+          shiftLabel.style.borderRadius = "6px";
+
+          const reassignBtn = document.createElement("button");
+          reassignBtn.textContent = "Reassign";
+          reassignBtn.style.padding = "6px 12px";
+          reassignBtn.style.fontSize = "0.9rem";
+          reassignBtn.style.backgroundColor = "rgba(37, 99, 235, 0.1)";
+          reassignBtn.style.color = "var(--accent-2)";
+          reassignBtn.style.border = "1px solid rgba(37, 99, 235, 0.3)";
+          reassignBtn.style.cursor = "pointer";
+          reassignBtn.style.borderRadius = "6px";
+          reassignBtn.addEventListener("click", () => {
+            if (confirm(`Reassign ${staff.name} to a new line?`)) {
+              const newLine = prompt("Enter new line name:", staff.line);
+              if (newLine && newLine.trim()) {
+                const existingLine = state.lines.find((l) => l.name.toLowerCase() === newLine.trim().toLowerCase());
+                if (existingLine || newLine.match(/^Line [1-8]$/)) {
+                  const finalLine = existingLine ? existingLine.name : newLine.trim();
+                  staff.line = finalLine;
+                  persist();
+                  // renderLineAssignmentsList(); // Removed - element doesn't exist
+                  // renderLineManagement();
+                  updateStatus(`Reassigned ${staff.name} to ${finalLine}`, "success");
+                } else {
+                  updateStatus(`Line "${newLine}" does not exist. Please create it first in Manage Lines.`, "danger");
+                }
+              }
+            }
+          });
+
+          const removeBtn = document.createElement("button");
+          removeBtn.textContent = "Remove";
+          removeBtn.className = "danger";
+          removeBtn.style.padding = "6px 12px";
+          removeBtn.style.fontSize = "0.9rem";
+
+          removeBtn.addEventListener("click", () => {
+            if (confirm(`Remove assignment for ${staff.name}?`)) {
+              staff.line = "";
+              staff.shift = "";
+              staff.assignmentDate = "";
+              persist();
+              // renderLineAssignmentsList(); // Removed - element doesn't exist
+              // renderLineManagement();
+              updateStatus(`Removed assignment for ${staff.name}`, "success");
+            }
+          });
+
+          row.appendChild(nameLabel);
+          row.appendChild(lineLabel);
+          row.appendChild(shiftLabel);
+          row.appendChild(reassignBtn);
+          row.appendChild(removeBtn);
+          assignmentList.appendChild(row);
+        });
+    };
+
+    // Removed: addLineAssignment - now handled by checkboxes in the table
+    /*
+    const addLineAssignment = () => {
+      const staffName = lineAssignStaffSelect.value.trim();
+      const lineName = lineAssignLineSelect.value.trim();
+      const shift = lineAssignShift.value;
+      const date = lineAssignDate.value || formatDateInput(new Date());
+
+      if (!staffName) {
+        updateStatus("Please select a staff member.", "danger");
+        return;
+      }
+      if (!lineName) {
+        updateStatus("Please select a line.", "danger");
+        return;
+      }
+
+      const staff = state.staff.find((s) => s.name === staffName);
+      if (!staff) {
+        updateStatus("Staff not found.", "danger");
+        return;
+      }
+
+      // Check if staff is already assigned to a different line
+      if (staff.line && staff.line !== lineName) {
+        if (!confirm(`${staffName} is already assigned to ${staff.line}. Do you want to reassign to ${lineName}?`)) {
+          return;
+        }
+      }
+
+      // Check if another staff is already assigned to this line
+      const existingAssignment = state.staff.find(
+        (s) => s.line === lineName && s.name !== staffName
+      );
+      if (existingAssignment) {
+        updateStatus(`${existingAssignment.name} is already assigned to ${lineName}. Remove that assignment first.`, "danger");
+        showToast(`⚠️ ${lineName} already has ${existingAssignment.name}`, "danger");
+        return;
+      }
+
+      // Perform assignment
+      staff.line = lineName;
+      staff.shift = shift;
+      staff.assignmentDate = date;
+      persist();
+      // renderLineAssignmentsList(); // Removed - element doesn't exist
+      // renderLineManagement();
+      renderLineAssignmentSelectors();
+      lineAssignStaffSelect.value = "";
+      lineAssignLineSelect.value = "";
+      updateStatus(`✓ Assigned ${staffName} to ${lineName}`, "success");
+    };
+    */
+
+
+    // Line Management Functions
+    const renderLineManagement = () => {
+      if (!lineManagementList) return;
+      lineManagementList.innerHTML = "";
+      
+      // Show default Lines 1-8 (read-only with staff badges)
+      const defaultLinesSection = document.createElement("div");
+      defaultLinesSection.style.marginBottom = "16px";
+      
+      const defaultLinesHeader = document.createElement("p");
+      defaultLinesHeader.textContent = "Default Lines (1-8)";
+      defaultLinesHeader.style.fontSize = "0.85rem";
+      defaultLinesHeader.style.fontWeight = "600";
+      defaultLinesHeader.style.color = "var(--muted)";
+      defaultLinesHeader.style.marginBottom = "8px";
+      defaultLinesSection.appendChild(defaultLinesHeader);
+      
+      for (let i = 1; i <= 8; i++) {
+        const lineName = `Line ${i}`;
+        const assignedStaff = state.staff.find((s) => s.line === lineName);
+        
+        const row = document.createElement("div");
+        row.style.padding = "10px 12px";
+        row.style.backgroundColor = "rgba(248, 250, 252, 0.2)";
+        row.style.borderRadius = "6px";
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+        row.style.gap = "12px";
+        row.style.marginBottom = "6px";
+        
+        const lineLabelSpan = document.createElement("span");
+        lineLabelSpan.textContent = lineName;
+        lineLabelSpan.style.fontWeight = "500";
+        lineLabelSpan.style.fontSize = "0.9rem";
+        lineLabelSpan.style.minWidth = "70px";
+        
+        // Staff dropdown
+        const staffDropdown = document.createElement("select");
+        staffDropdown.style.flex = "1";
+        staffDropdown.innerHTML = '<option value="">Select Staff</option>';
+        
+        state.staff.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach((staff) => {
+          const option = document.createElement("option");
+          option.value = staff.name;
+          option.textContent = staff.name;
+          if (assignedStaff && staff.name === assignedStaff.name) {
+            option.selected = true;
+          }
+          staffDropdown.appendChild(option);
+        });
+        
+        staffDropdown.addEventListener("change", () => {
+          const selectedStaffName = staffDropdown.value;
+          const date = lineAssignDate.value;
+          const shift = lineAssignShift.value;
+          
+          // Remove existing assignment from this line
+          const previouslyAssigned = state.staff.find((s) => s.line === lineName);
+          if (previouslyAssigned) {
+            previouslyAssigned.line = "";
+            previouslyAssigned.shift = "";
+            previouslyAssigned.assignmentDate = "";
+          }
+          
+          if (selectedStaffName) {
+            if (!date) {
+              updateStatus("Please select a date first.", "danger");
+              staffDropdown.value = "";
+              persist();
+              renderLineAssignments(); // Full sync
+              return;
+            }
+            
+            const selectedStaff = state.staff.find((s) => s.name === selectedStaffName);
+            if (selectedStaff) {
+              // Remove from previous line if assigned elsewhere
+              if (selectedStaff.line && selectedStaff.line !== lineName) {
+                selectedStaff.line = "";
+              }
+              
+              selectedStaff.line = lineName;
+              selectedStaff.shift = shift;
+              selectedStaff.assignmentDate = date;
+              updateStatus(`✓ Assigned ${selectedStaffName} to ${lineName}`, "success");
+            }
+          } else {
+            updateStatus(`Removed assignment from ${lineName}`, "success");
+          }
+          
+          persist();
+          renderLineAssignments(); // Full sync
+        });
+        
+        row.appendChild(lineLabelSpan);
+        row.appendChild(staffDropdown);
+        defaultLinesSection.appendChild(row);
+      }
+      lineManagementList.appendChild(defaultLinesSection);
+      
+      // Show custom lines (editable)
+      const customLines = state.lines.filter((line) => !line.name.match(/^Line [1-8]$/));
+      
+      if (customLines.length > 0) {
+        const customLinesHeader = document.createElement("p");
+        customLinesHeader.textContent = "Custom Lines";
+        customLinesHeader.style.fontSize = "0.85rem";
+        customLinesHeader.style.fontWeight = "600";
+        customLinesHeader.style.color = "var(--muted)";
+        customLinesHeader.style.marginTop = "16px";
+        customLinesHeader.style.marginBottom = "8px";
+        lineManagementList.appendChild(customLinesHeader);
+      }
+
+      customLines.forEach((line) => {
+        // Find assigned staff for this line
+        const assignedStaff = state.staff.find((s) => s.line === line.name);
+        
+        const row = document.createElement("div");
+        row.className = "staff-row";
+        row.style.padding = "12px";
+        row.style.backgroundColor = "rgba(248, 250, 252, 0.3)";
+        row.style.borderRadius = "8px";
+        row.style.display = "flex";
+        row.style.alignItems = "center";
+        row.style.gap = "12px";
+        row.style.flexWrap = "wrap";
+
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.value = line.name;
+        nameInput.placeholder = "Line name";
+        nameInput.style.flex = "1";
+        nameInput.style.minWidth = "120px";
+
+        // Staff dropdown
+        const staffDropdown = document.createElement("select");
+        staffDropdown.style.flex = "1.5";
+        staffDropdown.style.minWidth = "150px";
+        staffDropdown.innerHTML = '<option value="">Select Staff</option>';
+        
+        state.staff.slice().sort((a, b) => a.name.localeCompare(b.name)).forEach((staff) => {
+          const option = document.createElement("option");
+          option.value = staff.name;
+          option.textContent = staff.name;
+          if (assignedStaff && staff.name === assignedStaff.name) {
+            option.selected = true;
+          }
+          staffDropdown.appendChild(option);
+        });
+        
+        staffDropdown.addEventListener("change", () => {
+          const selectedStaffName = staffDropdown.value;
+          const date = lineAssignDate.value;
+          const shift = lineAssignShift.value;
+          
+          // Remove existing assignment from this line
+          const previouslyAssigned = state.staff.find((s) => s.line === line.name);
+          if (previouslyAssigned) {
+            previouslyAssigned.line = "";
+            previouslyAssigned.shift = "";
+            previouslyAssigned.assignmentDate = "";
+          }
+          
+          if (selectedStaffName) {
+            if (!date) {
+              updateStatus("Please select a date first.", "danger");
+              staffDropdown.value = "";
+              persist();
+              renderLineAssignments(); // Full sync
+              return;
+            }
+            
+            const selectedStaff = state.staff.find((s) => s.name === selectedStaffName);
+            if (selectedStaff) {
+              // Remove from previous line if assigned elsewhere
+              if (selectedStaff.line && selectedStaff.line !== line.name) {
+                selectedStaff.line = "";
+              }
+              
+              selectedStaff.line = line.name;
+              selectedStaff.shift = shift;
+              selectedStaff.assignmentDate = date;
+              updateStatus(`✓ Assigned ${selectedStaffName} to ${line.name}`, "success");
+            }
+          } else {
+            updateStatus(`Removed assignment from ${line.name}`, "success");
+          }
+          
+          persist();
+          renderLineAssignments(); // Full sync
+        });
+
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "Save";
+        saveBtn.style.whiteSpace = "nowrap";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remove";
+        removeBtn.className = "danger";
+        removeBtn.style.whiteSpace = "nowrap";
+
+        saveBtn.addEventListener("click", () => {
+          const newName = nameInput.value.trim();
+          if (!newName) {
+            updateStatus("Line name cannot be empty.", "danger");
+            nameInput.value = line.name;
+            return;
+          }
+          if (newName !== line.name && state.lines.some((l) => l.name.toLowerCase() === newName.toLowerCase())) {
+            updateStatus("Line name already exists.", "danger");
+            nameInput.value = line.name;
+            return;
+          }
+
+          // Update staff assignments with new line name
+          state.staff.forEach((staff) => {
+            if (staff.line === line.name) {
+              staff.line = newName;
+            }
+          });
+
+          line.name = newName;
+          persist();
+          renderLineAssignments(); // Full sync
+          updateStatus(`✓ Updated line name to "${newName}"`, "success");
+        });
+
+        removeBtn.addEventListener("click", () => {
+          if (!confirm(`Remove line "${line.name}" and any staff assignments?`)) {
+            return;
+          }
+
+          // Remove assignments for this line
+          state.staff.forEach((staff) => {
+            if (staff.line === line.name) {
+              staff.line = "";
+              staff.shift = "";
+              staff.assignmentDate = "";
+            }
+          });
+
+          state.lines = state.lines.filter((l) => l !== line);
+          persist();
+          renderLineAssignments(); // Full sync
+          updateStatus(`✓ Removed line "${line.name}" and cleared assignments`, "success");
+        });
+
+        row.appendChild(nameInput);
+        row.appendChild(staffDropdown);
+        row.appendChild(saveBtn);
+        row.appendChild(removeBtn);
+        lineManagementList.appendChild(row);
+      });
+    };
+
+    const addLine = () => {
+      const name = newLineName.value.trim();
+      
+      if (!name) {
+        updateStatus("Please enter a line name.", "danger");
+        showToast("⚠️ Please enter a line name", "danger");
+        return;
+      }
+      
+      const existingLine = state.lines.find((line) => line.name.toLowerCase() === name.toLowerCase());
+      
+      if (existingLine) {
+        updateStatus("Line already exists.", "danger");
+        showToast(`⚠️ Line "${name}" already exists`, "danger");
+        return;
+      }
+
+      state.lines.push({ id: state.lines.length + 1, name, machines: [] });
+      newLineName.value = "";
+      persist();
+      renderLineAssignments(); // Full sync including both panels
+      updateStatus(`✓ Added new line: "${name}"`, "success");
+      showToast(`✓ Added line "${name}"`, "success");
+    };
+
+    const addLineInAssignment = () => {
+      const name = newLineNameInput.value.trim();
+      
+      if (!name) {
+        updateStatus("Please enter a line name.", "danger");
+        showToast("⚠️ Please enter a line name", "danger");
+        return;
+      }
+      
+      const existingLine = state.lines.find((line) => line.name.toLowerCase() === name.toLowerCase());
+      
+      if (existingLine) {
+        updateStatus("Line already exists.", "danger");
+        showToast(`⚠️ Line "${name}" already exists`, "danger");
+        return;
+      }
+
+      state.lines.push({ id: state.lines.length + 1, name, machines: [] });
+      newLineNameInput.value = "";
+      persist();
+      renderLineAssignments();
+      updateStatus(`✓ Added new line: "${name}"`, "success");
+      showToast(`✓ Added line "${name}"`, "success");
+    };
+
+    const renderSpreadsheetLineAssignments = () => {
+      if (!lineAssignmentSpreadsheetBody) return;
+      
+      lineAssignmentSpreadsheetBody.innerHTML = "";
+      
+      if (state.staff.length === 0) {
+        const emptyRow = document.createElement("tr");
+        emptyRow.innerHTML = '<td colspan="2" style="padding: 20px; text-align: center; color: var(--muted); border: 1px solid rgba(0, 0, 0, 0.1);">No staff added. Please add staff in Workers section.</td>';
+        lineAssignmentSpreadsheetBody.appendChild(emptyRow);
+        return;
+      }
+      
+      // Helper function to create staff dropdown for a line
+      const createStaffDropdown = (lineName, backgroundColor = "transparent") => {
+        const row = document.createElement("tr");
+        row.style.transition = "background-color 0.2s";
+        if (backgroundColor) row.style.backgroundColor = backgroundColor;
+        
+        row.addEventListener("mouseenter", () => {
+          if (backgroundColor.includes("255, 243")) {
+            row.style.backgroundColor = "rgba(255, 243, 205, 0.4)";
+          } else {
+            row.style.backgroundColor = "rgba(248, 250, 252, 0.5)";
+          }
+        });
+        row.addEventListener("mouseleave", () => {
+          if (backgroundColor) {
+            row.style.backgroundColor = backgroundColor;
+          } else {
+            row.style.backgroundColor = "transparent";
+          }
+        });
+        
+        // Column 1: Staff name dropdown
+        const staffCell = document.createElement("td");
+        staffCell.style.padding = "8px 12px";
+        staffCell.style.border = "1px solid rgba(0, 0, 0, 0.1)";
+        
+        const staffDropdown = document.createElement("select");
+        staffDropdown.style.width = "100%";
+        staffDropdown.style.padding = "8px";
+        staffDropdown.style.border = "1px solid rgba(0, 0, 0, 0.1)";
+        staffDropdown.style.borderRadius = "4px";
+        staffDropdown.style.backgroundColor = "white";
+        staffDropdown.style.cursor = "pointer";
+        
+        // Add default option
+        const defaultOption = document.createElement("option");
+        defaultOption.value = "";
+        defaultOption.textContent = "Select Staff";
+        staffDropdown.appendChild(defaultOption);
+        
+        // Sort staff alphabetically and add to dropdown
+        const sortedStaff = state.staff.slice().sort((a, b) => a.name.localeCompare(b.name));
+        sortedStaff.forEach((staff) => {
+          const option = document.createElement("option");
+          option.value = staff.name;
+          option.textContent = staff.name;
+          
+          // Pre-select if this staff is assigned to this line
+          if (staff.line === lineName) {
+            option.selected = true;
+          }
+          
+          staffDropdown.appendChild(option);
+        });
+        
+        // Auto-assign on change
+        staffDropdown.addEventListener("change", () => {
+          const selectedStaffName = staffDropdown.value;
+          const date = lineAssignDate.value;
+          const shift = lineAssignShift.value;
+          
+          if (!selectedStaffName) {
+            // If clearing selection, remove any assignment for this line
+            const currentlyAssigned = state.staff.find((s) => s.line === lineName);
+            if (currentlyAssigned) {
+              currentlyAssigned.line = "";
+              currentlyAssigned.shift = "";
+              currentlyAssigned.assignmentDate = "";
+            }
+            persist();
+            renderLineAssignments(); // Full sync
+            updateStatus(`Removed assignment from ${lineName}`, "success");
+            return;
+          }
+          
+          if (!date) {
+            updateStatus("Please select a date first.", "danger");
+            staffDropdown.value = "";
+            return;
+          }
+          
+          const selectedStaff = state.staff.find((s) => s.name === selectedStaffName);
+          if (!selectedStaff) {
+            updateStatus("Staff not found.", "danger");
+            return;
+          }
+          
+          // Check if another staff is already assigned to this line
+          const existingAssignment = state.staff.find((s) => s.line === lineName && s.name !== selectedStaffName);
+          if (existingAssignment) {
+            existingAssignment.line = "";
+            existingAssignment.shift = "";
+            existingAssignment.assignmentDate = "";
+          }
+          
+          // Assign the staff to this line
+          selectedStaff.line = lineName;
+          selectedStaff.shift = shift;
+          selectedStaff.assignmentDate = date;
+          persist();
+          renderLineAssignments(); // Full sync
+          updateStatus(`✓ Assigned ${selectedStaffName} to ${lineName}`, "success");
+        });
+        
+        staffCell.appendChild(staffDropdown);
+        row.appendChild(staffCell);
+        
+        return { row, staffCell };
+      };
+      
+      // Create rows for Lines 1-8
+      for (let i = 1; i <= 8; i++) {
+        const lineName = `Line ${i}`;
+        const { row } = createStaffDropdown(lineName);
+        
+        // Column 2: Line name
+        const lineCell = document.createElement("td");
+        lineCell.style.padding = "8px 12px";
+        lineCell.style.border = "1px solid rgba(0, 0, 0, 0.1)";
+        lineCell.style.fontWeight = "500";
+        lineCell.textContent = lineName;
+        
+        row.appendChild(lineCell);
+        lineAssignmentSpreadsheetBody.appendChild(row);
+      }
+      
+      // Create rows for custom lines (beyond Line 1-8)
+      const customLines = state.lines.filter((line) => !line.name.match(/^Line [1-8]$/));
+      customLines.forEach((line) => {
+        const lineName = line.name;
+        const { row } = createStaffDropdown(lineName, "rgba(255, 243, 205, 0.2)");
+        
+        // Column 2: Line name (with remove button)
+        const lineCell = document.createElement("td");
+        lineCell.style.padding = "8px 12px";
+        lineCell.style.border = "1px solid rgba(0, 0, 0, 0.1)";
+        lineCell.style.fontWeight = "500";
+        lineCell.style.display = "flex";
+        lineCell.style.alignItems = "center";
+        lineCell.style.gap = "8px";
+        
+        const lineNameSpan = document.createElement("span");
+        lineNameSpan.textContent = lineName;
+        lineNameSpan.style.flex = "1";
+        
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remove";
+        removeBtn.className = "danger";
+        removeBtn.style.fontSize = "0.8rem";
+        removeBtn.style.padding = "4px 8px";
+        removeBtn.style.whiteSpace = "nowrap";
+        
+        removeBtn.addEventListener("click", () => {
+          if (!confirm(`Remove line "${lineName}" and any staff assignments?`)) {
+            return;
+          }
+          
+          // Remove assignments for this line
+          state.staff.forEach((staff) => {
+            if (staff.line === lineName) {
+              staff.line = "";
+              staff.shift = "";
+              staff.assignmentDate = "";
+            }
+          });
+          
+          state.lines = state.lines.filter((l) => l !== line);
+          persist();
+          renderLineAssignments(); // Full sync
+          updateStatus(`✓ Removed line "${lineName}" and cleared assignments`, "success");
+        });
+        
+        lineCell.appendChild(lineNameSpan);
+        lineCell.appendChild(removeBtn);
+        
+        row.appendChild(lineCell);
+        lineAssignmentSpreadsheetBody.appendChild(row);
+      });
+    };
+    
+    const renderLineAssignments = () => {
+      // renderLineAssignmentSelectors(); // Removed - no longer using dropdowns
+      // renderLineAssignmentsList(); // Removed - element doesn't exist in new layout
+      renderSpreadsheetLineAssignments();
+      // renderLineManagement(); // Removed - Line Management panel removed
+    };
+
+    const renderMachines = () => {
+      machineList.innerHTML = "";
+      if (!state.machines.length) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "No machines added yet.";
+        machineList.appendChild(empty);
+        return;
+      }
+
+      state.machines
+        .slice()
+        .forEach((machine) => {
+          const row = document.createElement("div");
+          row.className = "staff-row";
+
+          const nameInput = document.createElement("input");
+          nameInput.type = "text";
+          nameInput.value = machine.name;
+
+          const lineInput = document.createElement("input");
+          lineInput.type = "text";
+          lineInput.value = machine.line || "";
+
+          const saveBtn = document.createElement("button");
+          saveBtn.textContent = "Save";
+
+          const removeBtn = document.createElement("button");
+          removeBtn.textContent = "Remove";
+          removeBtn.className = "danger";
+
+          saveBtn.addEventListener("click", () => {
+            const updatedName = nameInput.value.trim();
+            const updatedLine = lineInput.value.trim();
+            if (!updatedName) {
+              alert("Machine name cannot be empty.");
+              nameInput.value = machine.name;
+              return;
+            }
+            machine.name = updatedName;
+            machine.line = updatedLine;
+            persist();
+            renderMachines();
+            updateStatus(`Updated machine: ${updatedName}`, "neutral");
+          });
+
+          removeBtn.addEventListener("click", () => {
+            if (!confirm(`Remove machine ${machine.name}?`)) {
+              return;
+            }
+            state.machines = state.machines.filter((item) => item !== machine);
+            persist();
+            renderMachines();
+            updateStatus(`Removed machine: ${machine.name}`, "neutral");
+          });
+
+          row.appendChild(nameInput);
+          row.appendChild(lineInput);
+          row.appendChild(saveBtn);
+          row.appendChild(removeBtn);
+          machineList.appendChild(row);
+        });
+    };
+
+    const renderMachineAssignment = () => {
+      machineAssignList.innerHTML = "";
+      if (!state.lines.length) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "No lines available.";
+        machineAssignList.appendChild(empty);
+        return;
+      }
+
+      state.lines.forEach((line) => {
+        const lineContainer = document.createElement("div");
+        lineContainer.style.marginBottom = "20px";
+        lineContainer.style.padding = "14px";
+        lineContainer.style.borderRadius = "12px";
+        lineContainer.style.backgroundColor = "rgba(248, 250, 252, 0.5)";
+        lineContainer.style.border = "1px solid var(--border)";
+
+        const lineLabel = document.createElement("div");
+        lineLabel.style.fontWeight = "700";
+        lineLabel.style.marginBottom = "10px";
+        lineLabel.style.fontSize = "1.05rem";
+        lineLabel.style.color = "var(--accent)";
+        lineLabel.textContent = line.name;
+        lineContainer.appendChild(lineLabel);
+
+        line.machines.forEach((machine) => {
+          const machineRow = document.createElement("div");
+          machineRow.className = "staff-row";
+          machineRow.style.marginBottom = "10px";
+
+          const nameInput = document.createElement("input");
+          nameInput.type = "text";
+          nameInput.value = machine.name;
+          nameInput.placeholder = "Machine Name";
+
+          const shiftSelect = document.createElement("select");
+          shiftSelect.innerHTML = '<option value="shift1">Shift 1 (8AM-8PM)</option><option value="shift2">Shift 2 (8PM-8AM)</option>';
+          shiftSelect.value = machine.shift || machineAssignShift.value || getCurrentShift();
+
+          const componentSelect = document.createElement("select");
+          componentSelect.innerHTML = '<option value="">No Component</option>';
+          state.components.forEach((comp) => {
+            const option = document.createElement("option");
+            option.value = comp.id;
+            option.textContent = comp.name;
+            componentSelect.appendChild(option);
+          });
+          componentSelect.value = machine.componentId || "";
+
+          const saveBtn = document.createElement("button");
+          saveBtn.textContent = "Save";
+          saveBtn.style.minWidth = "80px";
+
+          saveBtn.addEventListener("click", () => {
+            const updatedName = nameInput.value.trim();
+            if (!updatedName) {
+              alert("Machine name cannot be empty.");
+              return;
+            }
+            machine.name = updatedName;
+            machine.shift = shiftSelect.value;
+            machine.componentId = componentSelect.value || "";
+            persist();
+            renderMachineAssignment();
+            updateStatus(`Updated ${updatedName}`, "neutral");
+          });
+
+          machineRow.appendChild(nameInput);
+          machineRow.appendChild(shiftSelect);
+          machineRow.appendChild(componentSelect);
+          machineRow.appendChild(saveBtn);
+          lineContainer.appendChild(machineRow);
+        });
+
+        machineAssignList.appendChild(lineContainer);
+      });
+    };
+
+    const renderComponentManagement = () => {
+      componentList.innerHTML = "";
+      if (!state.components.length) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "No components added yet.";
+        componentList.appendChild(empty);
+        return;
+      }
+
+      state.components.forEach((component) => {
+        const row = document.createElement("div");
+        row.className = "staff-row";
+
+        const nameInput = document.createElement("input");
+        nameInput.type = "text";
+        nameInput.value = component.name;
+
+        const saveBtn = document.createElement("button");
+        saveBtn.textContent = "Save";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.textContent = "Remove";
+        removeBtn.className = "danger";
+
+        saveBtn.addEventListener("click", () => {
+          const updatedName = nameInput.value.trim();
+          if (!updatedName) {
+            alert("Component name cannot be empty.");
+            nameInput.value = component.name;
+            return;
+          }
+          if (
+            updatedName !== component.name &&
+            state.components.some((c) => c.name.toLowerCase() === updatedName.toLowerCase())
+          ) {
+            alert("Component name already exists.");
+            nameInput.value = component.name;
+            return;
+          }
+          component.name = updatedName;
+          persist();
+          renderComponentManagement();
+          renderMachineAssignment();
+          updateStatus(`Updated component: ${updatedName}`, "neutral");
+        });
+
+        removeBtn.addEventListener("click", () => {
+          if (!confirm(`Remove component ${component.name}?`)) {
+            return;
+          }
+          state.components = state.components.filter((c) => c !== component);
+          // Clear component references from machines
+          state.lines.forEach((line) => {
+            line.machines.forEach((machine) => {
+              if (machine.componentId === component.id) {
+                machine.componentId = "";
+              }
+            });
+          });
+          persist();
+          renderComponentManagement();
+          renderMachineAssignment();
+          updateStatus(`Removed component: ${component.name}`, "neutral");
+        });
+
+        row.appendChild(nameInput);
+        row.appendChild(saveBtn);
+        row.appendChild(removeBtn);
+        componentList.appendChild(row);
+      });
+    };
+
+    const getCurrentShift = () => {
+      const now = new Date();
+      const hour = now.getHours();
+      // Shift 1: 8 AM (8) to 8 PM (20), Shift 2: 8 PM (20) to 8 AM
+      return hour >= 20 || hour < 8 ? "shift2" : "shift1";
+    };
+
+    // Auto shift change - checks and updates shift dropdown automatically
+    const autoUpdateShift = () => {
+      const currentShift = getCurrentShift();
+      
+      // Update line assignment shift
+      if (lineAssignShift && lineAssignShift.value !== currentShift) {
+        const previousShift = lineAssignShift.value;
+        lineAssignShift.value = currentShift;
+        
+        // Only trigger change event and clear assignments if shift actually changed
+        if (previousShift) {
+          // Clear all staff assignments when shift auto-changes
+          state.staff.forEach((staff) => {
+            staff.line = "";
+            staff.shift = "";
+            staff.assignmentDate = "";
+          });
+          persist();
+          
+          const shiftName = currentShift === "shift1" ? "Shift 1 (8AM-8PM)" : "Shift 2 (8PM-8AM)";
+          updateStatus(`⏰ Auto-switched to ${shiftName}. All assignments cleared.`, "info");
+          showToast(`⏰ Switched to ${shiftName}`, "info");
+          renderLineAssignments();
+        }
+      }
+      
+      // Update machine assignment shift (without clearing assignments)
+      if (machineAssignShift && machineAssignShift.value !== currentShift) {
+        machineAssignShift.value = currentShift;
+      }
+    };
+
+    // Check shift every minute
+    setInterval(autoUpdateShift, 60000); // Check every 60 seconds
+
+    const getSelectedReportCategory = () => reportCategorySelect.value;
+
+    const getStaffCategory = (name) => {
+      const staff = state.staff.find((item) => item.name === name);
+      return staff ? staff.category : "General";
+    };
+
+    const addStaff = () => {
+      const name = newStaffInput.value.trim();
+      const category = newCategoryInput.value.trim() || "General";
+      if (!name) {
+        alert("Please enter a worker name.");
+        return;
+      }
+      if (state.staff.some((staff) => staff.name === name)) {
+        alert("Worker name already exists.");
+        return;
+      }
+      state.staff.push({ name, category, line: "", machine: "" });
+      persist();
+      renderStaff();
+      renderCategoryFilter();
+      renderRecords();
+      renderTotals();
+      renderStaffTotals();
+      renderWorkers();
+      renderWorkersEdit();
+      renderLineAssignments();
+      newStaffInput.value = "";
+      newCategoryInput.value = "";
+      updateStatus(`Added worker: ${name}`, "success");
+    };
+
+    const addMachine = () => {
+      const name = newMachineNameInput.value.trim();
+      const line = newMachineLineInput.value.trim();
+      if (!name) {
+        alert("Please enter a machine name.");
+        return;
+      }
+      state.machines.push({ name, line });
+      persist();
+      renderMachines();
+      newMachineNameInput.value = "";
+      newMachineLineInput.value = "";
+      updateStatus(`Added machine: ${name}`, "success");
+    };
+
+    const getReportRecords = () => {
+      const dateFilter = getSelectedReportDate();
+      const categoryFilter = getSelectedReportCategory();
+      if (!dateFilter) {
+        return categoryFilter
+          ? state.records.filter((record) => record.category === categoryFilter)
+          : state.records;
+      }
+      return state.records.filter((record) => {
+        const dateMatch = record.date === dateFilter;
+        const categoryMatch = categoryFilter ? record.category === categoryFilter : true;
+        return dateMatch && categoryMatch;
+      });
+    };
+
+    const renderRecords = () => {
+      recordsBody.innerHTML = "";
+      const records = getReportRecords();
+
+      if (!records.length) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 6;
+        cell.textContent = "No attendance records yet.";
+        cell.className = "muted";
+        row.appendChild(cell);
+        recordsBody.appendChild(row);
+        return;
+      }
+
+      records
+        .slice()
+        .reverse()
+        .forEach((record) => {
+          const duration = formatDuration(getRecordDurationMs(record)) || "-";
+          const row = document.createElement("tr");
+          [
+            record.staff,
+            record.category || "General",
+            record.punchIn || "-",
+            record.punchOut || "-",
+            duration,
+            record.date
+          ].forEach((value) => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
+          recordsBody.appendChild(row);
+        });
+    };
+
+    const renderTotals = () => {
+      totalsBody.innerHTML = "";
+      const totals = new Map();
+      let grandMs = 0;
+
+      state.records.forEach((record) => {
+        const ms = getRecordDurationMs(record);
+        if (ms <= 0) {
+          return;
+        }
+        totals.set(record.staff, (totals.get(record.staff) || 0) + ms);
+        grandMs += ms;
+      });
+
+      const staffList = state.staff.slice().sort((a, b) => a.name.localeCompare(b.name));
+      if (!staffList.length) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 2;
+        cell.textContent = "No staff found.";
+        cell.className = "muted";
+        row.appendChild(cell);
+        totalsBody.appendChild(row);
+        grandTotal.textContent = "00:00:00";
+        return;
+      }
+
+      staffList.forEach((staff) => {
+        const row = document.createElement("tr");
+        const totalMs = totals.get(staff.name) || 0;
+        [staff.name, formatDuration(totalMs) || "00:00:00"].forEach((value) => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+        totalsBody.appendChild(row);
+      });
+
+      grandTotal.textContent = formatDuration(grandMs) || "00:00:00";
+    };
+
+    const renderStaffTotals = () => {
+      staffTotalsBody.innerHTML = "";
+      const dateFilter = getSelectedReportDate();
+      const monthFilter = getSelectedReportMonth();
+      const categoryFilter = getSelectedReportCategory();
+      const staffList = state.staff
+        .filter((staff) => (categoryFilter ? staff.category === categoryFilter : true))
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      if (!staffList.length) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 4;
+        cell.textContent = "No staff found.";
+        cell.className = "muted";
+        row.appendChild(cell);
+        staffTotalsBody.appendChild(row);
+        return;
+      }
+
+      const getMonthKey = (dateStr) => {
+        const date = parseDateString(dateStr);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      };
+
+      staffList.forEach((staff) => {
+        const dayMs = dateFilter
+          ? state.records
+              .filter((record) => record.staff === staff.name && record.date === dateFilter)
+              .reduce((sum, record) => sum + getRecordDurationMs(record), 0)
+          : 0;
+
+        const monthMs = monthFilter
+          ? state.records
+              .filter((record) => record.staff === staff.name && getMonthKey(record.date) === monthFilter)
+              .reduce((sum, record) => sum + getRecordDurationMs(record), 0)
+          : 0;
+
+        const row = document.createElement("tr");
+        [
+          staff.name,
+          staff.category || "General",
+          dateFilter ? (formatDuration(dayMs) || "00:00:00") : "-",
+          monthFilter ? (formatDuration(monthMs) || "00:00:00") : "-"
+        ].forEach((value) => {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+        staffTotalsBody.appendChild(row);
+      });
+    };
+
+    const updateStatus = (message, tone = "neutral") => {
+      lastAction.textContent = message;
+      lastAction.classList.remove("neutral", "success", "danger");
+      lastAction.classList.add(tone);
+      if (tone === "success" || tone === "danger") {
+        showToast(message, tone);
+      }
+    };
+
+    const showToast = (message, tone) => {
+      const toast = document.createElement("div");
+      toast.className = `toast ${tone}`;
+      toast.textContent = message;
+      toastContainer.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(-6px)";
+      }, 2200);
+      setTimeout(() => {
+        toast.remove();
+      }, 2600);
+    };
+
+    const applyRipple = (event) => {
+      const button = event.currentTarget;
+      const circle = document.createElement("span");
+      const diameter = Math.max(button.clientWidth, button.clientHeight);
+      const radius = diameter / 2;
+      const rect = button.getBoundingClientRect();
+      circle.style.width = `${diameter}px`;
+      circle.style.height = `${diameter}px`;
+      circle.style.left = `${event.clientX - rect.left - radius}px`;
+      circle.style.top = `${event.clientY - rect.top - radius}px`;
+      circle.classList.add("ripple");
+      const existing = button.querySelector(".ripple");
+      if (existing) {
+        existing.remove();
+      }
+      button.appendChild(circle);
+    };
+
+    const setTheme = (mode) => {
+      document.body.classList.toggle("theme-dark", mode === "dark");
+      localStorage.setItem(THEME_KEY, mode);
+    };
+
+    const toggleDrawer = (open) => {
+      document.body.classList.toggle("drawer-open", open);
+      drawerOverlay.classList.toggle("active", open);
+    };
+
+    const renderAttendanceDetails = () => {
+      todayDetails.innerHTML = "";
+      if (!state.lastDetails.length) {
+        const empty = document.createElement("div");
+        empty.className = "muted";
+        empty.textContent = "No punch details yet.";
+        todayDetails.appendChild(empty);
+        return;
+      }
+
+      state.lastDetails.forEach((record) => {
+        const line = document.createElement("div");
+        line.className = "detail-line";
+        const statusClass = record.status === "Punch In" ? "in" : "out";
+        line.innerHTML = `
+          <span>Status:</span>
+          <span class="status-pill ${statusClass}">${record.status || ""}</span>
+          <span>Staff:</span> <strong>${record.staff}</strong>
+          <span>Category:</span> ${record.category || "General"}
+          <span>Punch In:</span> ${record.punchIn || "-"}
+          <span>Punch Out:</span> ${record.punchOut || "-"}
+          <span>Date:</span> ${record.date}
+        `;
+        todayDetails.appendChild(line);
+      });
+    };
+
+    const renderRecycleBin = () => {
+      recycleBody.innerHTML = "";
+      if (!state.recycle.length) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 6;
+        cell.textContent = "Recycle bin is empty.";
+        cell.className = "muted";
+        row.appendChild(cell);
+        recycleBody.appendChild(row);
+        return;
+      }
+
+      state.recycle
+        .slice()
+        .reverse()
+        .forEach((record) => {
+          const row = document.createElement("tr");
+          [
+            record.staff,
+            record.category || "General",
+            record.punchIn || "",
+            record.punchOut || "",
+            record.date,
+            record.deletedAt || ""
+          ].forEach((value) => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
+          recycleBody.appendChild(row);
+        });
+    };
+
+    const setClock = () => {
+      const now = new Date();
+      currentTime.textContent = `${formatDate(now)} ${formatTime(now)}`;
+    };
+
+    const getSelectedStaff = () => staffSelect.value;
+
+    const findOpenRecord = (staff, date) => {
+      return state.records.find((record) => record.staff === staff && record.date === date && !record.punchOut);
+    };
+
+    const punch = (type) => {
+      const staff = getSelectedStaff();
+      if (!staff) {
+        alert("Please select a staff name.");
+        return;
+      }
+
+      const now = new Date();
+      const selectedDate = getSelectedDate();
+      const date = formatDate(selectedDate);
+
+      const allowEdit = timeEditBlock.classList.contains("active");
+      const manualIn = allowEdit ? normalizeTimeInput(punchInTimeInput.value) : "";
+      const manualOut = allowEdit ? normalizeTimeInput(punchOutTimeInput.value) : "";
+
+      const time = type === "in"
+        ? (manualIn || formatTime(now))
+        : (manualOut || formatTime(now));
+
+      if (type === "in") {
+        const existing = findOpenRecord(staff, date);
+        if (existing) {
+          alert("Punch In already done for this staff today.");
+          return;
+        }
+
+        state.records.push({
+          staff,
+          category: getStaffCategory(staff),
+          punchIn: time,
+          punchOut: "",
+          date
+        });
+
+        state.lastDetails.unshift({
+          status: "Punch In",
+          staff,
+          category: getStaffCategory(staff),
+          punchIn: time,
+          punchOut: "",
+          date
+        });
+        updateStatus(`Punch In saved for ${staff} at ${time}`, "success");
+      }
+
+      if (type === "out") {
+        const open = findOpenRecord(staff, date);
+        if (!open) {
+          alert("No Punch In found for today. Please Punch In first.");
+          return;
+        }
+        const inDateTime = buildDateTime(open.date, open.punchIn);
+        const outDateTime = buildDateTime(date, time);
+        if (inDateTime && outDateTime && outDateTime.getTime() <= inDateTime.getTime()) {
+          alert("Punch Out time should be after Punch In time.");
+          return;
+        }
+        open.punchOut = time;
+        state.lastDetails.unshift({
+          status: "Punch Out",
+          staff,
+          category: getStaffCategory(staff),
+          punchIn: open.punchIn || "",
+          punchOut: time,
+          date: open.date
+        });
+        updateStatus(`Punch Out saved for ${staff} at ${time}`, "danger");
+      }
+
+      state.lastDetails = state.lastDetails.slice(0, 5);
+
+      persist();
+      renderRecords();
+      renderTotals();
+      renderStaffTotals();
+      renderAttendanceDetails();
+      if (type === "in") {
+        punchInTimeInput.value = "";
+      }
+      if (type === "out") {
+        punchOutTimeInput.value = "";
+      }
+    };
+
+    const exportCSV = () => {
+      const records = getReportRecords();
+      if (!records.length) {
+        alert("No records to export.");
+        return;
+      }
+
+      const header = ["Staff Name", "Category", "Punch In", "Punch Out", "Total Hours", "Date"];
+      const rows = records.map((record) => [
+        record.staff,
+        record.category || "General",
+        record.punchIn || "",
+        record.punchOut || "",
+        formatDuration(getRecordDurationMs(record)),
+        record.date
+      ]);
+
+      const csv = [header, ...rows]
+        .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
+
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `attendance_${Date.now()}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      updateStatus("CSV exported successfully.", "neutral");
+    };
+
+    const clearAll = () => {
+      if (!confirm("Clear all staff and attendance data?")) {
+        return;
+      }
+      if (state.records.length) {
+        const deletedAt = new Date().toLocaleString("en-GB");
+        state.recycle = state.recycle.concat(
+          state.records.map((record) => ({
+            ...record,
+            deletedAt
+          }))
+        );
+      }
+      state.staff = [...defaultStaff];
+      state.records = [];
+      state.lastDetails = [];
+      persist();
+      renderStaff();
+      renderCategoryFilter();
+      reportCategorySelect.value = "";
+      renderRecords();
+      renderTotals();
+      renderStaffTotals();
+      renderWorkers();
+      renderWorkersEdit();
+      renderLineAssignments();
+      renderRecycleBin();
+      updateStatus("All data cleared.", "neutral");
+    };
+
+    const handleNavigation = (targetId) => {
+      if (!targetId) {
+        console.warn('No targetId provided to handleNavigation');
+        return;
+      }
+      
+      console.log('Navigating to:', targetId);
+      
+      // Update active state on navigation buttons (sidebar + bottom nav)
+      navButtons.forEach((button) => {
+        button.classList.toggle("active", button.dataset.target === targetId);
+      });
+      
+      // Hide all sections and show target section
+      sections.forEach((section) => {
+        const isActive = section.id === targetId;
+        section.classList.toggle("active", isActive);
+        console.log(`Section ${section.id}: ${isActive ? 'ACTIVE' : 'hidden'}`);
+      });
+      
+      // Save to localStorage for persistence
+      localStorage.setItem("attendance_last_page", targetId);
+      
+      // Update page title
+      const pageTitles = {
+        "attendance": "Attendance",
+        "workers": "Workers",
+        "line-assign": "Line Assignment",
+        "machine-assign": "Machine Assignment",
+        "totals": "Total Working Hours",
+        "workers-edit": "Workers Edit",
+        "component-mgmt": "Component Management",
+        "report": "Report",
+        "recycle": "Recycle Bin"
+      };
+      
+      const pageTitle = pageTitles[targetId] || "Attendance";
+      updateStatus(`Viewing ${pageTitle}`, "neutral");
+    };
+
+    const init = () => {
+      loadState();
+      const savedTheme = localStorage.getItem(THEME_KEY) || "light";
+      setTheme(savedTheme);
+
+      // Pre-populate lines and machines if not already done
+      if (!state.lines.length) {
+        for (let i = 1; i <= 8; i++) {
+          state.lines.push({ id: i, name: `Line ${i}`, machines: [] });
+        }
+        for (let i = 1; i <= 48; i++) {
+          const lineIndex = Math.floor((i - 1) / 6);
+          state.lines[lineIndex].machines.push({ id: i, name: `Machine ${i}` });
+        }
+      }
+
+      renderStaff();
+      renderCategoryFilter();
+      renderWorkers();
+      punchDateInput.value = formatDateInput(new Date());
+      lineAssignDate.value = formatDateInput(new Date());
+      lineAssignShift.value = getCurrentShift();
+      autoUpdateShift(); // Initial check for auto shift change
+      machineAssignDate.value = formatDateInput(new Date());
+      machineAssignShift.value = getCurrentShift();
+      updateTimeEditVisibility();
+      reportDateInput.value = formatDateInput(new Date());
+      reportMonthInput.value = formatMonthInput(new Date());
+      reportCategorySelect.value = "";
+      renderRecords();
+      renderTotals();
+      renderStaffTotals();
+      renderWorkers();
+      renderWorkersEdit();
+      renderLineAssignments();
+      // updateAssignButtonState();  // Removed - no longer needed
+      renderMachineAssignment();
+      renderComponentManagement();
+      renderAttendanceDetails();
+      renderRecycleBin();
+      persist();
+      setClock();
+      setInterval(setClock, 1000);
+      
+      // Restore last opened page from localStorage
+      const lastPage = localStorage.getItem("attendance_last_page");
+      console.log('Initializing navigation...');
+      console.log('Found navButtons:', navButtons.length);
+      console.log('Found sections:', sections.length);
+      console.log('Last page from localStorage:', lastPage);
+      
+      if (lastPage && document.getElementById(lastPage)) {
+        handleNavigation(lastPage);
+      } else {
+        handleNavigation("attendance");
+      }
+    };
+
+    addStaffBtn.addEventListener("click", addStaff);
+    newStaffInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        addStaff();
+      }
+    });
+
+    newCategoryInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        addStaff();
+      }
+    });
+
+    // Event listeners for line assignment - removed (now using spreadsheet-style table)
+    /*
+    if (lineAssignStaffSelect) {
+      lineAssignStaffSelect.addEventListener("change", updateAssignButtonState);
+    }
+    if (lineAssignLineSelect) {
+      lineAssignLineSelect.addEventListener("change", updateAssignButtonState);
+    }
+
+    if (addLineAssignmentBtn) {
+      addLineAssignmentBtn.addEventListener("click", addLineAssignment);
+    }
+    
+    // Event listener for staff dropdown in line assignment
+    if (lineAssignStaffDropdown) {
+      lineAssignStaffDropdown.addEventListener("change", renderVerticalLineList);
+    }
+    */
+    
+    // Add Line event listeners for Line Assignment section
+    const setupLineAssignmentListeners = () => {
+      const inputField = document.getElementById("newLineNameInput");
+      const addBtn = document.getElementById("addLineInAssignBtn");
+      
+      if (addBtn) {
+        addBtn.addEventListener("click", () => {
+          addLineInAssignment();
+        });
+      }
+      
+      if (inputField) {
+        inputField.addEventListener("keypress", (event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            addLineInAssignment();
+          }
+        });
+      }
+    };
+    
+    setupLineAssignmentListeners();
+
+    const addComponent = () => {
+      const name = newComponentNameInput.value.trim();
+      if (!name) {
+        alert("Please enter a component name.");
+        return;
+      }
+      if (state.components.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
+        alert("Component already exists.");
+        return;
+      }
+      state.components.push({ id: Date.now(), name });
+      newComponentNameInput.value = "";
+      persist();
+      renderComponentManagement();
+      updateStatus(`Added component: ${name}`, "positive");
+    };
+
+    addComponentBtn.addEventListener("click", addComponent);
+    newComponentNameInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        addComponent();
+      }
+    });
+
+    punchInBtn.addEventListener("click", () => punch("in"));
+    punchOutBtn.addEventListener("click", () => punch("out"));
+    exportBtn.addEventListener("click", exportCSV);
+    clearBtn.addEventListener("click", clearAll);
+    punchDateInput.addEventListener("change", () => {
+      const dateText = formatDate(getSelectedDate());
+      updateStatus(`Selected date: ${dateText}`, "neutral");
+      updateTimeEditVisibility();
+    });
+
+    lineAssignDate.addEventListener("change", () => {
+      renderLineAssignments();
+    });
+
+    lineAssignShift.addEventListener("change", () => {
+      // Clear all staff assignments when shift changes
+      state.staff.forEach((staff) => {
+        staff.line = "";
+        staff.shift = "";
+        staff.assignmentDate = "";
+      });
+      persist();
+      updateStatus("Shift changed. All assignments cleared. Please reassign staff.", "info");
+      renderLineAssignments();
+    });
+
+    machineAssignDate.addEventListener("change", () => {
+      renderMachineAssignment();
+    });
+
+    machineAssignShift.addEventListener("change", () => {
+      renderMachineAssignment();
+    });
+
+    reportDateInput.addEventListener("change", () => {
+      renderRecords();
+      renderStaffTotals();
+    });
+
+    reportMonthInput.addEventListener("change", () => {
+      renderStaffTotals();
+    });
+
+    reportCategorySelect.addEventListener("change", () => {
+      renderRecords();
+      renderStaffTotals();
+    });
+
+    menuToggle.addEventListener("click", () => {
+      const isOpen = document.body.classList.contains("drawer-open");
+      toggleDrawer(!isOpen);
+    });
+
+    drawerOverlay.addEventListener("click", () => {
+      toggleDrawer(false);
+    });
+
+    restoreBinBtn.addEventListener("click", () => {
+      if (!state.recycle.length) {
+        alert("Recycle bin is empty.");
+        return;
+      }
+      state.recycle.forEach((record) => {
+        state.records.push({
+          staff: record.staff,
+          category: record.category || "General",
+          punchIn: record.punchIn || "",
+          punchOut: record.punchOut || "",
+          date: record.date
+        });
+        if (!state.staff.some((item) => item.name === record.staff)) {
+          state.staff.push({ name: record.staff, category: record.category || "General" });
+        }
+      });
+      state.recycle = [];
+      persist();
+      renderStaff();
+      renderCategoryFilter();
+      renderRecords();
+      renderTotals();
+      renderStaffTotals();
+      renderWorkers();
+      renderWorkersEdit();
+      renderRecycleBin();
+      updateStatus("Recycle bin restored.", "neutral");
+    });
+
+    emptyBinBtn.addEventListener("click", () => {
+      if (!state.recycle.length) {
+        alert("Recycle bin is already empty.");
+        return;
+      }
+      if (!confirm("Empty recycle bin permanently?")) {
+        return;
+      }
+      state.recycle = [];
+      persist();
+      renderRecycleBin();
+      updateStatus("Recycle bin emptied.", "neutral");
+    });
+
+    navButtons.forEach((button) => {
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const targetId = button.dataset.target;
+        console.log('Button clicked, target:', targetId);
+        if (targetId) {
+          handleNavigation(targetId);
+          toggleDrawer(false);
+        }
+      });
+    });
+    
+    console.log('Navigation event listeners attached to', navButtons.length, 'buttons');
+
+    document.querySelectorAll("button").forEach((button) => {
+      button.addEventListener("click", applyRipple);
+    });
+
+    init();
+  </script>
+</body>
+</html>
