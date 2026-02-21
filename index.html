@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Attendance Punching Register</title>
+  <title>Register</title>
   <style>
     :root {
       --bg: #eef2f8;
@@ -1656,6 +1656,20 @@
                 </tr>
               </thead>
               <tbody id="stockTableBody"></tbody>
+              <tfoot>
+                <tr id="stockTotalsRow">
+                  <td>Total</td>
+                  <td></td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                  <td>0</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         </section>
@@ -2928,6 +2942,50 @@
         });
     };
 
+      const ensureStockMachine = (machineName) => {
+        if (!machineName) {
+          return;
+        }
+        if (state.stock.some((machine) => machine.machineNumber === machineName)) {
+          return;
+        }
+        state.stock.push({
+          machineNumber: machineName,
+          component: "",
+          rpm: 0,
+          beamTotal: 0,
+          balanceBeam: 0,
+          onLoom: 0,
+          onFloor: 0,
+          shift1Prd: 0,
+          shift2Prd: 0
+        });
+      };
+
+      const removeStockMachine = (machineName) => {
+        if (!machineName) {
+          return;
+        }
+        state.stock = state.stock.filter((machine) => machine.machineNumber !== machineName);
+      };
+
+      const renameStockMachine = (oldName, newName) => {
+        if (!oldName || !newName || oldName === newName) {
+          return;
+        }
+        const existingNew = state.stock.find((machine) => machine.machineNumber === newName);
+        const existingOld = state.stock.find((machine) => machine.machineNumber === oldName);
+        if (existingOld) {
+          if (existingNew) {
+            state.stock = state.stock.filter((machine) => machine.machineNumber !== oldName);
+          } else {
+            existingOld.machineNumber = newName;
+          }
+        } else if (!existingNew) {
+          ensureStockMachine(newName);
+        }
+      };
+
     const renderMachineAssignment = () => {
       machineAssignList.innerHTML = "";
       if (!state.lines.length) {
@@ -2953,6 +3011,45 @@
         lineLabel.style.color = "var(--accent)";
         lineLabel.textContent = line.name;
         lineContainer.appendChild(lineLabel);
+
+        const addMachineRow = document.createElement("div");
+        addMachineRow.className = "staff-row";
+        addMachineRow.style.marginBottom = "10px";
+
+        const addMachineInput = document.createElement("input");
+        addMachineInput.type = "text";
+        addMachineInput.placeholder = "New Machine Name";
+
+        const addMachineBtn = document.createElement("button");
+        addMachineBtn.textContent = "Add Machine";
+        addMachineBtn.style.minWidth = "120px";
+
+        addMachineBtn.addEventListener("click", () => {
+          const machineName = addMachineInput.value.trim();
+          if (!machineName) {
+            alert("Please enter a machine name.");
+            return;
+          }
+          if (line.machines.some((m) => m.name.toLowerCase() === machineName.toLowerCase())) {
+            alert("Machine already exists in this line.");
+            return;
+          }
+          line.machines.push({
+            id: Date.now(),
+            name: machineName,
+            shift: machineAssignShift.value || getCurrentShift(),
+            componentId: ""
+          });
+          ensureStockMachine(machineName);
+          persist();
+          renderMachineAssignment();
+          renderStock();
+          updateStatus(`Added machine: ${machineName}`, "success");
+        });
+
+        addMachineRow.appendChild(addMachineInput);
+        addMachineRow.appendChild(addMachineBtn);
+        lineContainer.appendChild(addMachineRow);
 
         line.machines.forEach((machine) => {
           const machineRow = document.createElement("div");
@@ -2988,18 +3085,47 @@
               alert("Machine name cannot be empty.");
               return;
             }
+            if (
+              updatedName !== machine.name &&
+              line.machines.some((item) => item !== machine && item.name.toLowerCase() === updatedName.toLowerCase())
+            ) {
+              alert("Machine already exists in this line.");
+              nameInput.value = machine.name;
+              return;
+            }
+            const previousName = machine.name;
             machine.name = updatedName;
             machine.shift = shiftSelect.value;
             machine.componentId = componentSelect.value || "";
+            renameStockMachine(previousName, updatedName);
             persist();
             renderMachineAssignment();
+            renderStock();
             updateStatus(`Updated ${updatedName}`, "neutral");
+          });
+
+          const removeBtn = document.createElement("button");
+          removeBtn.textContent = "Remove";
+          removeBtn.className = "danger";
+          removeBtn.style.minWidth = "90px";
+
+          removeBtn.addEventListener("click", () => {
+            if (!confirm(`Remove machine ${machine.name}?`)) {
+              return;
+            }
+            removeStockMachine(machine.name);
+            line.machines = line.machines.filter((item) => item !== machine);
+            persist();
+            renderMachineAssignment();
+            renderStock();
+            updateStatus(`Removed machine: ${machine.name}`, "neutral");
           });
 
           machineRow.appendChild(nameInput);
           machineRow.appendChild(shiftSelect);
           machineRow.appendChild(componentSelect);
           machineRow.appendChild(saveBtn);
+          machineRow.appendChild(removeBtn);
           lineContainer.appendChild(machineRow);
         });
 
@@ -3643,7 +3769,24 @@
 
     const renderStock = () => {
       stockTableBody.innerHTML = "";
-      if (!state.stock.length) return;
+      const totalsRow = document.getElementById("stockTotalsRow");
+      if (!state.stock.length) {
+        if (totalsRow) {
+          totalsRow.innerHTML = "<td>Total</td><td></td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td>";
+        }
+        return;
+      }
+
+      const totals = {
+        rpm: 0,
+        beamTotal: 0,
+        balanceBeam: 0,
+        onLoom: 0,
+        onFloor: 0,
+        shift1Prd: 0,
+        shift2Prd: 0,
+        totalPrd: 0
+      };
       
       state.stock.forEach((machine, index) => {
         const componentOptions = state.components
@@ -3660,21 +3803,54 @@
           </select>
         `;
 
+        const rpmVal = Number(machine.rpm) || 0;
+        const beamTotalVal = Number(machine.beamTotal) || 0;
+        const balanceBeamVal = Number(machine.balanceBeam) || 0;
+        const onLoomVal = Number(machine.onLoom) || 0;
+        const onFloorVal = Number(machine.onFloor) || 0;
+        const shift1Val = Number(machine.shift1Prd) || 0;
+        const shift2Val = Number(machine.shift2Prd) || 0;
+        const totalPrdVal = shift1Val + shift2Val;
+
+        totals.rpm += rpmVal;
+        totals.beamTotal += beamTotalVal;
+        totals.balanceBeam += balanceBeamVal;
+        totals.onLoom += onLoomVal;
+        totals.onFloor += onFloorVal;
+        totals.shift1Prd += shift1Val;
+        totals.shift2Prd += shift2Val;
+        totals.totalPrd += totalPrdVal;
+
         const row = document.createElement("tr");
         row.innerHTML = `
           <td>${machine.machineNumber}</td>
           <td>${componentSelect}</td>
-          <td><input type="number" data-machine="${index}" data-field="rpm" value="${machine.rpm}" style="width: 80px;" /></td>
-          <td><input type="number" data-machine="${index}" data-field="beamTotal" value="${machine.beamTotal}" style="width: 80px;" /></td>
-          <td><input type="number" data-machine="${index}" data-field="balanceBeam" value="${machine.balanceBeam}" style="width: 80px;" /></td>
-          <td><input type="number" data-machine="${index}" data-field="onLoom" value="${machine.onLoom}" style="width: 80px;" /></td>
-          <td><input type="number" data-machine="${index}" data-field="onFloor" value="${machine.onFloor}" style="width: 80px;" /></td>
-          <td><input type="number" data-machine="${index}" data-field="shift1Prd" value="${machine.shift1Prd}" style="width: 80px;" /></td>
-          <td><input type="number" data-machine="${index}" data-field="shift2Prd" value="${machine.shift2Prd}" style="width: 80px;" /></td>
-          <td style="font-weight: 600;">${parseInt(machine.shift1Prd || 0) + parseInt(machine.shift2Prd || 0)}</td>
+          <td><input type="number" data-machine="${index}" data-field="rpm" value="${rpmVal}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="beamTotal" value="${beamTotalVal}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="balanceBeam" value="${balanceBeamVal}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="onLoom" value="${onLoomVal}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="onFloor" value="${onFloorVal}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="shift1Prd" value="${shift1Val}" style="width: 80px;" /></td>
+          <td><input type="number" data-machine="${index}" data-field="shift2Prd" value="${shift2Val}" style="width: 80px;" /></td>
+          <td style="font-weight: 600;">${totalPrdVal}</td>
         `;
         stockTableBody.appendChild(row);
       });
+
+      if (totalsRow) {
+        totalsRow.innerHTML = `
+          <td>Total</td>
+          <td></td>
+          <td>${totals.rpm}</td>
+          <td>${totals.beamTotal}</td>
+          <td>${totals.balanceBeam}</td>
+          <td>${totals.onLoom}</td>
+          <td>${totals.onFloor}</td>
+          <td>${totals.shift1Prd}</td>
+          <td>${totals.shift2Prd}</td>
+          <td>${totals.totalPrd}</td>
+        `;
+      }
       
       // Add event listeners to inputs
       document.querySelectorAll("#stockTableBody input[type='number']").forEach(input => {
